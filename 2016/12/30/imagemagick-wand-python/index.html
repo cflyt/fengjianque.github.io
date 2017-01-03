@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>使用ImageMagick的python封装库wand处理动态GIF图片 | Hexo</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Hexo主题,服务端,分布式,高并发,网站,C++,JAVA,PYTHON" />
+  
+
+  <meta name="description" content="背景动态的GIF图片具有特殊性，对图片的处理缩放、裁剪、加水印，需要一帧帧图片处理。我用过的图片的处理库有PILlow、ImageMagick/GraphicsMagick、Opencv。这些库对动态GIF的支持如下：
+
+PIllow：支持读取动态GIF图片为单独帧，但是如果动态GIF的的帧使用自己的调色板时，颜色失真很严重，不支持动态GIF保存。
+ImageMagick: 支持动态GIF的读和写">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用ImageMagick的python封装库wand处理动态GIF图片">
+<meta property="og:url" content="http://fengjianque.github.io/2016/12/30/imagemagick-wand-python/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景动态的GIF图片具有特殊性，对图片的处理缩放、裁剪、加水印，需要一帧帧图片处理。我用过的图片的处理库有PILlow、ImageMagick/GraphicsMagick、Opencv。这些库对动态GIF的支持如下：
+
+PIllow：支持读取动态GIF图片为单独帧，但是如果动态GIF的的帧使用自己的调色板时，颜色失真很严重，不支持动态GIF保存。
+ImageMagick: 支持动态GIF的读和写">
+<meta property="og:updated_time" content="2017-01-03T11:55:44.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用ImageMagick的python封装库wand处理动态GIF图片">
+<meta name="twitter:description" content="背景动态的GIF图片具有特殊性，对图片的处理缩放、裁剪、加水印，需要一帧帧图片处理。我用过的图片的处理库有PILlow、ImageMagick/GraphicsMagick、Opencv。这些库对动态GIF的支持如下：
+
+PIllow：支持读取动态GIF图片为单独帧，但是如果动态GIF的的帧使用自己的调色板时，颜色失真很严重，不支持动态GIF保存。
+ImageMagick: 支持动态GIF的读和写">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=07a1c304" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            rel="noopener noreferrer"
+            target="_blank"
+            >
+            RSS
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#背景"><span class="toc-text">背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#wand安装"><span class="toc-text">wand安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#裁剪crop"><span class="toc-text">裁剪crop</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#sample-resize"><span class="toc-text">sample/resize</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#贴水印"><span class="toc-text">贴水印</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#贴文字"><span class="toc-text">贴文字</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-imagemagick-wand-python" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">使用ImageMagick的python封装库wand处理动态GIF图片</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2016.12.30</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>Flyman</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/category/未分类/">未分类</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://fengjianque.github.io/2016/12/30/imagemagick-wand-python/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>动态的GIF图片具有特殊性，对图片的处理缩放、裁剪、加水印，需要一帧帧图片处理。我用过的图片的处理库有PILlow、ImageMagick/GraphicsMagick、Opencv。这些库对动态GIF的支持如下：</p>
+<ul>
+<li>PIllow：支持读取动态GIF图片为单独帧，但是如果动态GIF的的帧使用自己的调色板时，颜色失真很严重，不支持动态GIF保存。</li>
+<li>ImageMagick: 支持动态GIF的读和写，包括解帧合帧。</li>
+<li>GraphicsMagick: 从ImageMagick库fork出来，保留核心功能，针对稳定性、性能进行改进，对GIF支持和ImageMagick一样。</li>
+<li>Opencv: 不支持GIF读写。</li>
+</ul>
+<p>其中wand为ImageMagick的python封装，crop、resize、sample操作可以直接针对整个GIF，其他操作需要针对每一帧处理，然后合成保存。<br>pgmagick为GraphicsMagick的python封装，保留了c的数据类型，用起来稍麻烦，scale操作可以针对GIF，其他也需要解帧处理。</p>
+<p>本文重点介绍wand如何处理GIF。</p>
+<h2 id="wand安装"><a href="#wand安装" class="headerlink" title="wand安装"></a>wand安装</h2><p>wand依赖ImageMagick。</p>
+<p>debian系统，直接安装</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">apt-get update</div><div class="line">apt-get install libmagickwand-dev</div></pre></td></tr></table></figure>
+<p>然后使用pip安装wand。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pip install wand==0.4.4</div></pre></td></tr></table></figure>
+<h2 id="裁剪crop"><a href="#裁剪crop" class="headerlink" title="裁剪crop"></a>裁剪crop</h2><p>wand对动态GIF支持裁剪，对所有的帧都生效。</p>
+<p>函数原型：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">crop(*args, **kwargs)</div></pre></td></tr></table></figure>
+<p>参数</p>
+<ul>
+<li>left (numbers.Integral) – x-offset of the cropped image. default is 0</li>
+<li>top (numbers.Integral) – y-offset of the cropped image. default is 0</li>
+<li>right (numbers.Integral) – second x-offset of the cropped image. default is the width of the image. this parameter and width parameter are exclusive each other</li>
+<li>bottom (numbers.Integral) – second y-offset of the cropped image. default is the height of the image. this parameter and height parameter are exclusive each other</li>
+<li>width (numbers.Integral) – the width of the cropped image. default is the width of the image. this parameter and right parameter are exclusive each other</li>
+<li>height (numbers.Integral) – the height of the cropped image. default is the height of the image. this parameter and bottom parameter are exclusive each other</li>
+<li>reset_coords (bool) – optional flag. If set, after the rotation, the coordinate frame will be relocated to the upper-left corner of the new image. By default is True.</li>
+<li>gravity (GRAVITY_TYPES) – optional flag. If set, will calculate the top and left attributes. This requires both width and height parameters to be included.</li>
+</ul>
+<p>有两种用法：</p>
+<ul>
+<li>把左上角坐标, 右下角坐标传人; 或者左上角坐标，宽、高传入。</li>
+<li>gravity，和相对于区域起点的偏移x偏移left，y偏移top，要裁剪的height、weight传入。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">im.crop(left=crop_left, top=crop_top, width=crop_width, height=crop_height)</div><div class="line">im.crop(left=crop_left, top=crop_top, right=crop_right, bottom=crop_buttom)</div><div class="line">im.crop(left=offset_x, top=offest_y, width=crop_width, height=crop_height, gravity=&apos;center&apos;)</div></pre></td></tr></table></figure>
+<p>gravity指图片的9宫格的方位，分别有（’north_west’, ‘north’, ‘north_east’, ‘west’, ‘center’, ‘east’, ‘south_west’, ‘south’, ‘south_east’），如果设置这个值，那么起点坐标会重新设置。每个区域的的坐标起点会有所不同，可以看这里<a href="http://blog.csdn.net/pzw_0612/article/details/52296910" target="_blank" rel="external">gravity</a>。</p>
+<h3 id="sample-resize"><a href="#sample-resize" class="headerlink" title="sample/resize"></a>sample/resize</h3><p>wand对动态GIF支持缩放，对所有的帧都生效。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">resize(*args, **kwargs)</div><div class="line">sample(width, height)只支持两个参数，比resize快，损失一定的质量。</div></pre></td></tr></table></figure>
+<p>参数:</p>
+<ul>
+<li>width (numbers.Integral) – the width in the scaled image. default is the original width</li>
+<li>height (numbers.Integral) – the height in the scaled image. default is the original height</li>
+<li>filter (basestring, numbers.Integral) – a filter type to use for resizing. choose one in FILTER_TYPES. default is ‘undefined’ which means IM will try to guess best one to use</li>
+<li>blur (numbers.Real) – the blur factor where &gt; 1 is blurry, &lt; 1 is sharp. default is 1</li>
+</ul>
+<p>resize还可以带模糊功能，对整个GIF有效。</p>
+<h3 id="贴水印"><a href="#贴水印" class="headerlink" title="贴水印"></a>贴水印</h3><p>除了裁剪，缩放，其他对动态GIF的操作都必须一帧帧处理，然后再合成。<br>wand提供sequence，保存解析出来的图片帧。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">watermark(image, transparency, left, top)</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">from wand.image import Image</div><div class="line"></div><div class="line">position = (100, 50)</div><div class="line">opacity = 0.1</div><div class="line">with Image(filename=&apos;test.gif&apos;) as oriImg, \</div><div class="line">        Image(filename=&apos;mark.png&apos;) as mark:</div><div class="line">        for i in range(len(oriImg.sequence)):</div><div class="line">                with oriImg.sequence.index_context(i):</div><div class="line">                    oriImg.watermark(mark, transparency=opacity, left=position[0]-oriImg.page[2], top=position[1]-oriImg.page[3])</div><div class="line"></div><div class="line">        oriImg.save(filename=&apos;new.gif&apos;)</div></pre></td></tr></table></figure>
+<p>注意这里面需要注意的地方：</p>
+<ul>
+<li>需要使用index_context打开进行帧修改，然后close（这里用with）才生效； 如果用 <code>for frame in oriImg:</code> 需要append到一个新的Image容器修改才生效。</li>
+<li>有些动态GIF不是每一帧大小都一样的，偏移背景的位置也不一样，wand中把这种信息保存在page中，page为四元组，（width, height, left, top）。贴水印的时候要注意转移坐标。</li>
+<li>每打开一个Image，都需要close，否则有内存泄露。</li>
+</ul>
+<h3 id="贴文字"><a href="#贴文字" class="headerlink" title="贴文字"></a>贴文字</h3><p>使用caption函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">caption(*args, **kwargs)</div></pre></td></tr></table></figure>
+<p>参数:</p>
+<ul>
+<li>text (basestring) – text to write</li>
+<li>left (numbers.Integral) – x offset in pixels</li>
+<li>top (numbers.Integral) – y offset in pixels</li>
+<li>width (numbers.Integral) – width of caption in pixels. default is width of the image</li>
+<li>height (numbers.Integral) – height of caption in pixels. default is height of the image</li>
+<li>font (wand.font.Font) – font to use. default is font of the image</li>
+<li>gravity (basestring) – text placement gravity. uses the current gravity setting of the image by default</li>
+</ul>
+<p>看下面的代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">wand_font = wand.font.Font(font_path, size=font_size,</div><div class="line">        color=wand.color.Color(font_color), antialias=True,)</div><div class="line">w, h = im.sequence[0].size if im.animation else im.size</div><div class="line">textsize = (100, 100)</div><div class="line">with Image(filename=&apos;wizard:&apos;) as img:</div><div class="line">    from wand.drawing import Drawing</div><div class="line">    with Drawing() as context:</div><div class="line">        #context.font_family = &apos;monospace&apos;</div><div class="line">        context.font_size = font_size</div><div class="line">        context.font = font_path</div><div class="line">        metrics = context.get_font_metrics(img,</div><div class="line">                                           text.encode(&apos;utf8&apos;),</div><div class="line">                                           multiline=False)</div><div class="line">        textsize = (int(metrics.text_width), int(metrics.text_height))</div><div class="line"></div><div class="line">textpos = get_watermark_position(w, h, textsize[0], textsize[1],</div><div class="line">                                      gravity, dx, dy)</div><div class="line">for i in range(len(im.sequence)):</div><div class="line">    with im.sequence.index_context(i):</div><div class="line">        im.caption(text, int(textpos[0]-im.page[2]), int(textpos[1]-im.page[3]), textsize[0], textsize[1], wand_font)</div><div class="line">im.save(file=self.fopout.content)</div><div class="line">im.close()</div></pre></td></tr></table></figure>
+<p>caption函数设计直接传人text，但是我们其实不知道text占用多大， 需要先算出大小，然后调整放置的位置。</p>
+<p>上面的流程：</p>
+<ol>
+<li>创建一个font，包含字体文件路径，字体大小、字体颜色；</li>
+<li>使用Drawing计算font占的大小；</li>
+<li>使用font放置的位置；</li>
+<li>使用caption函数。</li>
+</ol>
+
+    
+  </div>
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持flyman</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2016/12/30/git-subtree/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              rel="noopener noreferrer"
+              target="_blank"
+              >
+              RSS
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'flyman';
+    
+    var disqus_url = 'http://fengjianque.github.io/2016/12/30/imagemagick-wand-python/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//flyman.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
