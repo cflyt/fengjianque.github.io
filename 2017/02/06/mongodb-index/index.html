@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Mongdb：索引优化和工具 | Hexo</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术," />
+  
+
+  <meta name="description" content="Mongdb：索引优化和工具索引能帮助我们快速的找到我们的记录，在数据量庞大的情况下，显得尤其重要。不用索引的查询称为“全表扫描”，对大集合来说，效率非常低。在Mongodb中增加索引可以：
+
+把一个线性查询时间复杂度O(n)变为b树查询时间复杂度为O(lgn);
+减少在内存中的排序；
+减少硬盘的访问，减少寻页缺失；
+索引覆盖，有些查询直接从索引中获得，不需要查记录。
+
+本篇文章的内容如下：1、索">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mongdb：索引优化和工具">
+<meta property="og:url" content="http://fengjianque.github.io/2017/02/06/mongodb-index/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Mongdb：索引优化和工具索引能帮助我们快速的找到我们的记录，在数据量庞大的情况下，显得尤其重要。不用索引的查询称为“全表扫描”，对大集合来说，效率非常低。在Mongodb中增加索引可以：
+
+把一个线性查询时间复杂度O(n)变为b树查询时间复杂度为O(lgn);
+减少在内存中的排序；
+减少硬盘的访问，减少寻页缺失；
+索引覆盖，有些查询直接从索引中获得，不需要查记录。
+
+本篇文章的内容如下：1、索">
+<meta property="og:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/01/age-role-index.png">
+<meta property="og:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/03/role-score.png"">
+<meta property="og:updated_time" content="2017-02-06T15:06:27.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mongdb：索引优化和工具">
+<meta name="twitter:description" content="Mongdb：索引优化和工具索引能帮助我们快速的找到我们的记录，在数据量庞大的情况下，显得尤其重要。不用索引的查询称为“全表扫描”，对大集合来说，效率非常低。在Mongodb中增加索引可以：
+
+把一个线性查询时间复杂度O(n)变为b树查询时间复杂度为O(lgn);
+减少在内存中的排序；
+减少硬盘的访问，减少寻页缺失；
+索引覆盖，有些查询直接从索引中获得，不需要查记录。
+
+本篇文章的内容如下：1、索">
+<meta name="twitter:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/01/age-role-index.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=07a1c304" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            rel="noopener noreferrer"
+            target="_blank"
+            >
+            RSS
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">Posts List</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Mongdb：索引优化和工具"><span class="toc-text">Mongdb：索引优化和工具</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-索引的相关操作和复合索引"><span class="toc-text">1 索引的相关操作和复合索引</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-关于索引的基本操作"><span class="toc-text">1.1 关于索引的基本操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-Mongodb-复合索引"><span class="toc-text">1.2 Mongodb 复合索引</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-优化原理"><span class="toc-text">2 优化原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-查询索引优化原理"><span class="toc-text">2.1 查询索引优化原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#explain"><span class="toc-text">explain()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范围查询"><span class="toc-text">范围查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范围查询-等值查询"><span class="toc-text">范围查询+等值查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范围查询-排序"><span class="toc-text">范围查询+排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#等值查询-范围查询-排序"><span class="toc-text">等值查询+范围查询+排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-mongodb查询优化器原理"><span class="toc-text">2.2 mongodb查询优化器原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-总结优化策略"><span class="toc-text">2.3 总结优化策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Mongodb索引优化工具"><span class="toc-text">3 Mongodb索引优化工具</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-Profiler"><span class="toc-text">3.1 Profiler</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#开启Profiling"><span class="toc-text">开启Profiling</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Profiling记录"><span class="toc-text">Profiling记录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Profiling效率"><span class="toc-text">Profiling效率</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#工作过程"><span class="toc-text">工作过程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#优化标准"><span class="toc-text">优化标准</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Dex的使用"><span class="toc-text">Dex的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#安装"><span class="toc-text">安装</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#启动Dex"><span class="toc-text">启动Dex</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#过滤器"><span class="toc-text">过滤器</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#监控模式"><span class="toc-text">监控模式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#分析输出"><span class="toc-text">分析输出</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-建议"><span class="toc-text">4 建议</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-mongodb-index" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Mongdb：索引优化和工具</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.02.06</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>Flyman</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/category/未分类/">未分类</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://fengjianque.github.io/2017/02/06/mongodb-index/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="Mongdb：索引优化和工具"><a href="#Mongdb：索引优化和工具" class="headerlink" title="Mongdb：索引优化和工具"></a>Mongdb：索引优化和工具</h1><p>索引能帮助我们快速的找到我们的记录，在数据量庞大的情况下，显得尤其重要。不用索引的查询称为“全表扫描”，对大集合来说，效率非常低。<br>在Mongodb中增加索引可以：</p>
+<ul>
+<li>把一个线性查询时间复杂度O(n)变为b树查询时间复杂度为O(lgn);</li>
+<li>减少在内存中的排序；</li>
+<li>减少硬盘的访问，减少寻页缺失；</li>
+<li>索引覆盖，有些查询直接从索引中获得，不需要查记录。</li>
+</ul>
+<p>本篇文章的内容如下：<br>1、索引的相关操作和复合索引；<br>2、查询索引优化原理和Mongodb查询优化器索引选择机制；<br>3、索引优化工具。</p>
+<h2 id="1-索引的相关操作和复合索引"><a href="#1-索引的相关操作和复合索引" class="headerlink" title="1 索引的相关操作和复合索引"></a>1 索引的相关操作和复合索引</h2><h3 id="1-1-关于索引的基本操作"><a href="#1-1-关于索引的基本操作" class="headerlink" title="1.1 关于索引的基本操作"></a>1.1 关于索引的基本操作</h3><ul>
+<li><p><code>db.collection.ensureIndex(indexed_fields, [options]);</code> 创建一个索引。<br>建索引不得不提的是，建索引就是一个容易引起长时间写锁的问题，MongoDB在前台建索引时需要占用一个写锁（而且不会临时放弃），<strong>阻止读和写</strong>，如果集合的数据量很大，建索引通常要花比较长时间，特别容易引起问题。 使用background: true来解决问题，background在建索引中允许读和写操作，减少建索引带来的影响。</p>
+</li>
+<li><p><code>db.collection.getIndexes();</code> 查看某个表上的所有索引。</p>
+</li>
+<li><code>db.collection.dropIndex(indexed_fields);</code> 删除索引。</li>
+<li><code>db.collection.find(find_fields).explain();</code> 查看查询的过程的统计。</li>
+<li><code>db.collection.find(fields).hint(index_or_name);</code> 强制查询使用某个索引。</li>
+</ul>
+<h3 id="1-2-Mongodb-复合索引"><a href="#1-2-Mongodb-复合索引" class="headerlink" title="1.2 Mongodb 复合索引"></a>1.2 Mongodb 复合索引</h3><p>复合索引就是建立在多个字段上的索引，当查询中有多个排序方向或者包含多个键值的条件时，建立复合索引就很有用。<br><code>db.test.ensureIndex({age: 1, role: 1}, {background: true})</code><br>就建立一个在age和role上的索引，先以age升序，如果age相同，就以role升序排序。</p>
+<p><strong>1.隐含索引</strong><br>如果有一个由N个键的索引，那么会得到N个键前缀组成的索引，比如有复合索引{a:1, b:1, c:1, d:1},实际上我们同时拥有了{a:1}, {a:1, b:1}, {a:1, b:1, c:1}这三个索引。</p>
+<p><strong>2.排序顺序</strong><br>索引以两种顺序存储键，升序 (1) 或降序 (-1)。对于单键索引而言，键的顺序无关紧要因为MongoDB可以以任一顺序遍历整个索引。但是对于 复合索引 而言，索引的顺序可以决定索引是否支持直接排序操作。只有基于多键的排序，索引的顺序才重要。<br>相互翻转（在每个方向上都乘以-1）的索引是等价的。{age:1, role:1}和{age:-1, role:-1}等价，{age:1, role:-1}和{age:-1, role:1}也是等价的。 但是{age:1, role:1}和{age:1, role:-1}不等价。为什么呢，想想B树的遍历方式，就明白了哈。</p>
+<p><code>db.test.find().sort({age:1, role:-1)</code>要求查询结果以age升序，role降序排序，{age:1, role:1}索引就不支持直接排序了，需要进行内存排序{scanAndOrder:true}。</p>
+<h2 id="2-优化原理"><a href="#2-优化原理" class="headerlink" title="2 优化原理"></a>2 优化原理</h2><h3 id="2-1-查询索引优化原理"><a href="#2-1-查询索引优化原理" class="headerlink" title="2.1 查询索引优化原理"></a>2.1 查询索引优化原理</h3><h3 id="explain"><a href="#explain" class="headerlink" title="explain()"></a>explain()</h3><p>explain()能够提供大量与查询相关的信息，对于速度较慢的查询来讲是一个重要的诊断工具之一。</p>
+<pre><code>db.test.find({age: {&quot;$gte&quot;: 30 , &quot;$lte&quot;: 50}}).explain()
+{
+    &quot;cursor&quot; : &quot;BasicCursor&quot;,
+    &quot;n&quot; : 3,
+    &quot;nscannedObjects&quot; : 4,
+    &quot;nscanned&quot; : 4,
+    &quot;scanAndOrder&quot; : false,
+    &quot;indexOnly&quot; : false,
+    &quot;millis&quot; : 0
+    .....
+}
+cursor:本次所使用的索引，此次没有使用索引，如果使用了索引为BtreeCursor;
+n：此次查询返回的文档数量；
+nscannedObjects：mongodb按照索引指针去查找实际文档次数；
+nscanned：如果有索引，那么这个值就是查找过索引条目的数量，如果没有索引，就是全表扫描，表示检查锅文档的数量。
+scanAndOrder：mongodb是否在内存中对结果进行排序。
+indexOnly：只需要索引就完成了查询，索引覆盖。
+millis：查询所耗费的毫秒数。
+</code></pre><p>因此可以得出<strong>nscanned &gt;= nscannedObjects &gt;= n</strong>。对于简单查询你可能期望3个数字是相等的，scanAndOrder：false，这意味着你做出了MongoDB使用的完美的索引。不过很多时候在索引查找速度和是否在内存排序之间需要做出一个权衡。</p>
+<h3 id="范围查询"><a href="#范围查询" class="headerlink" title="范围查询"></a>范围查询</h3><p>首先建一个在age上的索引{age: 1}，查询30&lt;=age&lt;=50,</p>
+<pre><code>db.test.ensureIndex({age: 1}, {background: true})
+db.test.find({age: {&quot;$gte&quot;: 30 , &quot;$lte&quot;: 50}}).explain()
+{
+    &quot;cursor&quot; : &quot;BtreeCursor age_1&quot;,
+    &quot;n&quot; : 3,
+    &quot;nscannedObjects&quot; : 3,
+    &quot;nscanned&quot; : 3,
+    &quot;scanAndOrder&quot; : false,
+    &quot;indexOnly&quot; : false,
+    &quot;millis&quot; : 0,
+    ......
+}
+</code></pre><p>建了age字段索引之后，cursor变为”BtreeCursor age_1”，nscanned和nscannedObjects都降为到了3，说明查询使用了索引跳过不符合条件的记录。</p>
+<h3 id="范围查询-等值查询"><a href="#范围查询-等值查询" class="headerlink" title="范围查询+等值查询"></a>范围查询+等值查询</h3><p>如果范围查询基础上，再加上等值查询{role: “female”}，结果如下：</p>
+<pre><code>db.test.find({age: {&quot;$gte&quot;: 30 , &quot;$lte&quot;: 50}, type: true}).explain()
+{
+    &quot;cursor&quot; : &quot;BtreeCursor age_1&quot;,
+    &quot;n&quot; : 2,
+    &quot;nscannedObjects&quot; : 3,
+    &quot;nscanned&quot; : 3,
+    ....
+}
+</code></pre><p>过滤了role: ”female”，n降为2，但是nscanned和nscannedObjects仍然为3。<br>创建{age:1, role:1}复合索引又如何？</p>
+<pre><code>db.test.dropIndex({age:1})
+db.test.ensureIndex({age: 1, role: 1}, {background: true})
+db.test.find({age: {&quot;$gte&quot;: 30 , &quot;$lte&quot;: 50}, role: &quot;female&quot;}).explain()
+{
+    &quot;cursor&quot; : &quot;BtreeCursor age_1_role_1&quot;,
+    &quot;n&quot; : 2,
+    &quot;nscannedObjects&quot; : 2,
+    &quot;nscanned&quot; : 3,
+    .....
+}
+</code></pre><p>nscannedObjects降为2，与n相等，但nscanned还是为3，mongodb做了age30到50之间索引全扫描。从下面的图可以了解查找过程。<br><img src="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/01/age-role-index.png" alt=""><br>从上图清晰看到，根据B树的遍历方式，mongodb遍历了30到50之间的索引。</p>
+<p>能不能使nscanned = nscannedObjects = n，细心的你回发现，定义索引的顺序有问题，定义{role:1, age:1 }索引，再进行查找，结果如下：</p>
+<pre><code>db.test.dropIndex({age:1, role:1})
+db.test.ensureIndex({ role: 1, age: 1}, {background: true})
+db.test.find({age: {&quot;$gte&quot;: 30 , &quot;$lte&quot;: 50}, role: &quot;female&quot;}).explain()
+{
+    &quot;cursor&quot; : &quot;BtreeCursor role_1_type_1&quot;,
+    &quot;n&quot; : 2,
+    &quot;nscannedObjects&quot; : 2,
+    &quot;nscanned&quot; : 2,
+    &quot;scanAndOrder&quot; : false,
+    ....
+}
+</code></pre><p>nscanned变成了2。<br>如果数据量有上千万条，缩小nscanned能提升很大的效率。但也要衡量下多值索引带来的内存开销，插入时的开销。</p>
+<h3 id="范围查询-排序"><a href="#范围查询-排序" class="headerlink" title="范围查询+排序"></a>范围查询+排序</h3><p>范围查询加上排序，我们应该怎么来优化呢？<br><code>db.test.find({age: {&quot;$gte&quot;: 30 , &quot;$lte&quot;: 50}).explain()</code><br>前面的{role:1,age:1}索引放在这里没有作用，Mongodb还是做了全表扫描。<br>我们来建一个索引{age:1, score:1}，然后查询来分析。</p>
+<pre><code>db.test.ensureIndex({age:1, score:1})
+db.test.find({age: {&quot;$gte&quot;: 20 , &quot;$lte&quot;: 40}, score: {&quot;$gte&quot;:80, &quot;$lte&quot;:100}}).sort({score:1}).explain()
+{
+    &quot;cursor&quot; : &quot;BtreeCursor age_1_score_1&quot;,
+    &quot;n&quot; : 2,
+    &quot;nscannedObjects&quot; : 2,
+    &quot;nscanned&quot; : 2,
+    &quot;scanAndOrder&quot; : true,
+    ....
+}
+</code></pre><p>nscanned=nscannedObjects=n，似乎达到我们的要求，但是scanAndOrder为true，这就意味着MongoDB会把所有查询出来的结果放进内存，然后进行排序，接着一次性输出结果。这将占用服务器大量的CPU和RAM，而且mongodb对排序还有个限制，就是排序集不能大于32M，否则会出现错误。</p>
+<p>创建索引{score:1, age:1 },继续查询得到</p>
+<pre><code>db.test.ensureIndex({score:1, age:1})
+db.test.find({age: {&quot;$gte&quot;: 20 , &quot;$lte&quot;: 40}, score: {&quot;$gte&quot;:80, &quot;$lte&quot;:100}}).sort({score:1}).explain()
+{
+    &quot;cursor&quot; : &quot;BtreeCursor score_1_age_1&quot;,
+    &quot;n&quot; : 2,
+    &quot;nscannedObjects&quot; : 2,
+    &quot;nscanned&quot; : 3,
+    &quot;scanAndOrder&quot; : false,
+    ....
+}
+</code></pre><p>修改索引后，nscanned虽然为3，但是scanAndOrder为false，免去了排序。这两者之间根据实际情况进行权衡，如果nscanned和n相差特别大，则优先查询，否则优先排序。</p>
+<h3 id="等值查询-范围查询-排序"><a href="#等值查询-范围查询-排序" class="headerlink" title="等值查询+范围查询+排序"></a>等值查询+范围查询+排序</h3><p>如果一个查询包含了等值查询，范围查询，排序，又该如何优化？<br><code>db.test.find({age: {&quot;$gte&quot;: 30 , &quot;$lte&quot;: 50}, role: &quot;female&quot;}).sort({score:1}).explain()</code><br>对于这个查询，前面已经介绍过，使用{role:1, age:1},将获得nscanned = nscannedObjects = n =2的体验，但是有排序的缺点。<br>使用索引{role:1, score:1},索引结构如下图，<br><img src="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/03/role-score.png&quot;" alt=""><br>nscanned = nscannedObjects=3, 不用排序。<br>以牺牲nscanned的代价解决了scanAndOrder = true的问题；既然nscanned已不可减少，那么我们是否可以减少nscannedObjects？我们向索引中添加age，这样一来Mongo就不用去从每个文件中获取了。<br>建立索引{role:1, score:1, age:1},然后查询</p>
+<pre><code>db.test.find({age: {&quot;$gte&quot;: 30 , &quot;$lte&quot;: 50}, role: &quot;female&quot;}).sort({score:1}).hint(&apos;role_1_score_1_age_1&apos;).explain()
+{
+    &quot;cursor&quot; : &quot;BtreeCursor role_1_score_1_age_1&quot;,
+    &quot;n&quot; : 2,
+    &quot;nscannedObjects&quot; : 2,
+    &quot;nscanned&quot; : 3,
+    &quot;scanAndOrder&quot; : false,
+    ....
+}
+</code></pre><p>现在nscannedObjects也降为2了，索引也尽善了，但是多字段的索引需要内存和影响写效率的，增加一个字段如果不能增加nscanned和nscannedObjects之间的差值，应该是得不偿失。</p>
+<h3 id="2-2-mongodb查询优化器原理"><a href="#2-2-mongodb查询优化器原理" class="headerlink" title="2.2 mongodb查询优化器原理"></a>2.2 mongodb查询优化器原理</h3><p>那么优化器如何工作的呢？<br>首先，它先分析查询，做一个初步的“最佳索引”分析；<br>其次，假如这个最佳索引不存在， 优化器会为每个可能有效适用于该查询的索引创建查询计划，随后并行运行这个计划，nscanned 值最低的计划胜出。优化器会停止那些长时间运行的计划，将胜出的计划保存下来，以便后续使用。如果有多个最佳索引，mongodb将随机选择一个。<br>最后优化器还会记住所有类似查询的选择（只到大规模文件变动或者索引上的变动）。<br>最佳索引是如何选取的呢？</p>
+<ul>
+<li>最佳索引必须包含查询中所有可以做过滤及需要排序的字段。</li>
+<li>如果查询包含范围查找或者排序，那么对于选择的索引，其中最后用到的键需能满足该范围查找或者排序。</li>
+<li>如果存在不同的最佳索引，那么Mongo将随机选择。</li>
+</ul>
+<p>表数据是变化的，索引也由可能不是最佳的了，查询优化器什么时候重新评估索引呢？</p>
+<ul>
+<li>数据表接收1000次写操作后；</li>
+<li>索引重建；</li>
+<li>增加或删除索引；</li>
+<li>mongod进程重启；</li>
+<li>执行explain()操作；</li>
+</ul>
+<p>当这些事件发生时，当前的缓存的查询计划会清空，重新评估，以便保证获得最佳的查询计划。</p>
+<h3 id="2-3-总结优化策略"><a href="#2-3-总结优化策略" class="headerlink" title="2.3 总结优化策略"></a>2.3 总结优化策略</h3><p>根据上面的分析，复合索引的顺序应该是</p>
+<ul>
+<li>等值查询的字段放在前面；</li>
+<li>接着是需要排序的字段；</li>
+<li>最后是范围查询的字段。<br>*<br>但是有值得权衡的地方，有可能查询访问更多的索引节点，如果排序字段在范围查询字段之前，这两者之间的取舍根据实际情况来定夺。</li>
+</ul>
+<h2 id="3-Mongodb索引优化工具"><a href="#3-Mongodb索引优化工具" class="headerlink" title="3 Mongodb索引优化工具"></a>3 Mongodb索引优化工具</h2><p>这里介绍Mongdb自带的优化器Profiler和第三方工具DEX。</p>
+<h3 id="3-1-Profiler"><a href="#3-1-Profiler" class="headerlink" title="3.1 Profiler"></a>3.1 Profiler</h3><p>类似于MySQL的slow log, Mongodb可以非常方便地记录下所有耗时过长操作，以便于调优。</p>
+<h4 id="开启Profiling"><a href="#开启Profiling" class="headerlink" title="开启Profiling"></a>开启Profiling</h4><p>Mongodb中Profiler默认是关闭的。有两种方式可以开启和控制Profiling的级别。<br>第一种在启动mongd实例时，加上-profile=级别；<br>第二种是在客户端中开启，使用命令db.setProfilingLevel(级别)来配置。<br>profiling有0，1，2三种级别：<br>0：不开启记录；<br>1：记录慢命令（默认是100ms）;<br>2：记录所有命令；</p>
+<p>修改默认慢时间可以在启动mongd实例时添加-slowms=xx或者在shell客户端启用的同时传入参数。<br><code>db.setProfilingLevel(1, 20)</code>设置的慢时间为20毫秒。<br><strong>注意profiling的默认时间的修改是全局起作用的，针对整个mongod实例。</strong></p>
+<h4 id="Profiling记录"><a href="#Profiling记录" class="headerlink" title="Profiling记录"></a>Profiling记录</h4><p>profiling的记录是在对应数据库下的，名字为system.profile。</p>
+<pre><code>db.system.profile.find().pretty()
+{
+ &quot;op&quot; : &quot;query&quot;,
+ &quot;ns&quot; : &quot;gacc.app_user_duration&quot;,
+ &quot;query&quot; : {
+  &quot;query&quot; : {
+   &quot;duration&quot; : {
+    &quot;$gt&quot; : 6000,
+    &quot;$lt&quot; : 60000
+   },
+   &quot;tin&quot; : {
+    &quot;$gt&quot; : 126414600,
+    &quot;$lt&quot; : 995810371
+   }
+  },
+  &quot;orderby&quot; : {
+   &quot;timestamp&quot; : -1
+  },
+  &quot;$explain&quot; : true
+ },
+ &quot;ntoskip&quot; : 0,
+ &quot;numYield&quot; : 0,
+ &quot;nreturned&quot; : 1,
+ &quot;responseLength&quot; : 770,
+ &quot;millis&quot; : 3263,
+ &quot;ts&quot; : ISODate(&quot;2015-03-11T11:53:41.741Z&quot;),
+ &quot;client&quot; : &quot;127.0.0.1&quot;,
+ &quot;allUsers&quot; : [ ],
+ &quot;user&quot; : &quot;&quot;
+}
+
+ts： 该命令在何时执行
+op: 操作类型
+query: 本命令的详细信息
+responseLength: 返回结果集的大小
+ntoreturn: 本次查询实际返回的结果集
+millis: 该命令执行耗时，以毫秒记
+</code></pre><p>show profile命令可以显示最新的5条操作记录；或者使用字段进行过滤查询。</p>
+<h4 id="Profiling效率"><a href="#Profiling效率" class="headerlink" title="Profiling效率"></a>Profiling效率</h4><p>profiling功能肯定是会影响效率的，但其记录用了更加高效的capped collection。这种collection有一些限制，来增加效率。</p>
+<ol>
+<li>固定大小；Capped Collections 必须事先创建，并设置大小：<blockquote>
+<p>db.createCollection(“collection”, {capped:true, size:100000})</p>
+</blockquote>
+</li>
+<li><p>Capped Collections 可以insert 和update 操作,不能delete 操作。只能用drop()方法删除整个Collection。</p>
+</li>
+<li><p>默认基于Insert 的次序排序的。如果查询时没有排序，则总是按照insert 的顺序返回。</p>
+</li>
+<li><p>FIFO。如果超过了Collection 的限定大小，则用FIFO 算法，新记录将替代最先insert的记录.</p>
+</li>
+</ol>
+<p>###3.2 Dex</p>
+<p>Dex是一个第三方的开源的Mongodb优化工具，建立在profiler上，但是对索引的分析有一套自己的标准，推荐最佳索引给开发者参考。</p>
+<h4 id="工作过程"><a href="#工作过程" class="headerlink" title="工作过程"></a>工作过程</h4><ol>
+<li>Dex遍历Mongodb的日志或者profile collection；</li>
+<li>从输入中Dex的LogParser或者ProfilerParser提取每个查询；</li>
+<li>将查询传人到QueryAnalyzer；</li>
+<li>QueryAnalyzer分析存在的索引，看是否符合自己的优化标准，如果不存在这样的索引，Dex就推荐一个。</li>
+</ol>
+<h4 id="优化标准"><a href="#优化标准" class="headerlink" title="优化标准"></a>优化标准</h4><p>第一步：解析queryDex会对查询query进行解析，分成下面几大类：</p>
+<ul>
+<li>EQUIV – 普通按数值进行的查询，比如：{a: 1}</li>
+<li>SORT – sort操作，比如： .sort({a: 1})</li>
+<li>RANGE – 范围查询，比如：Specifically: ‘$ne’, ‘$gt’, ‘$lt’, ‘$gte’, ‘$lte’, ‘$in’, ‘$nin’, ‘$all’, ‘$not’</li>
+<li>UNSUPPORTED<ul>
+<li>组合式查询，比如：$and, $or, $nor，</li>
+<li>除了RANGE之外的嵌套查询</li>
+</ul>
+</li>
+</ul>
+<p>第二步：判断当前索引情况有两个标准来找出查询所需的索引。</p>
+<ul>
+<li>Coverage (none, partial, full) - Coverage表示索引覆盖查询条件的情况。none表示完全无索引覆盖。full表示query中的字段都能找到索引。partial表示只有部分字段。</li>
+<li>Order - Order是用于判断索引的顺序是否理想。理想的索引顺序应该是：等值 ○ 排序 ○ 范围.<br>值得注意的是，对地理位置索引只会进行分析，但是不会提出改进建议。</li>
+</ul>
+<p>第三步：通过上面的分析，Dex会生成一个此查询的最佳索引。如果这个索引不存在，并且查询情况不包括上面提到的UNSUPPORTED，那么Dex就会做出相应的索引优化建议。</p>
+<h4 id="Dex的使用"><a href="#Dex的使用" class="headerlink" title="Dex的使用"></a>Dex的使用</h4><h5 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h5><blockquote>
+<p>pip install dex</p>
+</blockquote>
+<h5 id="启动Dex"><a href="#启动Dex" class="headerlink" title="启动Dex"></a>启动Dex</h5><ol>
+<li><p>以mongodb的log日志为数据源，启动dex。</p>
+<blockquote>
+<p>dex -f /var/log/mongodb.log mongodb://uutest:xxx@127.0.0.1:27017/gacc</p>
+</blockquote>
+</li>
+<li><p>或者以system.profile数据表为分析依据，事先需要开启mongodb的Profiling,推荐开启级别为1的Profiling。</p>
+<blockquote>
+<p>dex -p mongodb://uutest:xxxx@m127.0.0.1:27017/gacc</p>
+</blockquote>
+</li>
+</ol>
+<h5 id="过滤器"><a href="#过滤器" class="headerlink" title="过滤器"></a>过滤器</h5><ol>
+<li><p>过滤数据库和数据表<br>通过 -n 参数可以对数据库和数据表进行过滤，缩小范围，加快分析。</p>
+<blockquote>
+<p>dex -f my/mongod/data/path/mongodb.log -n “gacc.app_user_duration” mongodb://uutest:xxx@127.0.0.1:27017/gacc<br>dex -p -n “<em>.app_user_duration” mongodb://uutest:xxx@127.0.0.1:27017/gacc<br>dex -f my/mongod/data/path/mongodb.log -n “gacc.\</em>“ -n “gacc_stat.*“ mongodb://uutest:xxx@127.0.0.1:27017/gacc</p>
+</blockquote>
+</li>
+<li><p>过滤查询时间<br>使用-s/–slows加时间，能过滤慢日志，当查询小于这个值就不被Dex分析。</p>
+<blockquote>
+<p>dex -f my/mongod/data/path/mongodb.log -s 400<br>dex -p -n “*.app_user_duration” mongodb://uutest:xxx@127.0.0.1:27017/gacc –slowms 1000</p>
+</blockquote>
+</li>
+</ol>
+<h5 id="监控模式"><a href="#监控模式" class="headerlink" title="监控模式"></a>监控模式</h5><p>Dex提供了实时监控模式，使用-w参数，实时分析新产生的查询，启用监控模式后，对以往旧的记录不分析。<br>例子：</p>
+<blockquote>
+<p>dex -w -f my/mongod/data/path/mongodb.log mongodb://myUser:myPass@myHost:12345/myDb</p>
+</blockquote>
+<p>如果既有-w，又有-p， 则必须添加-n进行数据库的过滤，形如[dbname.*],举例如下：</p>
+<blockquote>
+<p>dex -w -p -n “gacc.*” mongodb://uutest:xxx@127.0.0.1:27017/gacc</p>
+</blockquote>
+<p>而且如果事先没有开启Profiling，dex会自动打开级别为1的Profiling.</p>
+<h5 id="分析输出"><a href="#分析输出" class="headerlink" title="分析输出"></a>分析输出</h5><p>Dex的分析报告输出有两部分：</p>
+<ol>
+<li><p>runStats – 分析日志或profile数据统计<br>runStats.linesRead – 多少条数母（日志或profile）发送到Dex；<br>runStats.linesAnalyzed -多少条数目dex成功提取查询，并试图给出建议的数量；<br>runStats.linesWithRecommendations – 有多少条查询能收益与推荐的的索引；<br>runStats.logSource – 日志的路径。如果使用 -p/–profile 模式，此项为空.</p>
+</li>
+<li><p>result -：推荐索引的信息包含在results中 ，是一个包含所有查询推荐的list。<br>queryMask - 查询模式, 具体的查询条件；<br>namespace - 查询的数据库集合collection；<br>stats - 针对这个查询做出的统计</p>
+<ul>
+<li>stats.count - 这个查询出现的次数；</li>
+<li>stats.avgTimeMillis - 这个查询花费的平均时间</li>
+<li>stats.totalTimeMillis - 该查询所有的时间消费总和。<br>recommendation - 推荐索引的信息</li>
+<li>recommendation.index - 推荐的索引；</li>
+<li>recommendation.namespace - 索引所在的数据库集合；</li>
+<li>recommendation.shellCommand - 推荐的建索引的命令。</li>
+</ul>
+<p>从Dex的统计信息和索引推荐信息，我们可以知道我们的索引存在的问题，还可以参考它分析出来的索引推荐，帮助我们更好的选择索引。</p>
+</li>
+</ol>
+<h2 id="4-建议"><a href="#4-建议" class="headerlink" title="4 建议"></a>4 建议</h2><p>什么时候需要优化索引呢，个人认为有以下几种：</p>
+<ul>
+<li>如果 nscanned 远大于 nreturned；</li>
+<li>索引覆盖，如果索引就能包含返回值；</li>
+<li>执行 update 操作时同样检查一下 nscanned，并使用索引减少文档扫描数量；</li>
+<li>使用 db.eval() 在服务端执行某些统计操作；</li>
+<li>减少返回文档数量，使用 skip &amp; limit 分页；</li>
+<li>数据库文档数量很大，但是只查询少数的的文档。</li>
+</ul>
+<p>如果很少读，那么尽量不要添加索引，因为索引越多，写操作会越慢。如果读量很大，那么创建索引还是比较划算的。如果写查询量或者update量过大的话，多加索引是会有好处的。</p>
+
+    
+  </div>
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持flyman</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/02/06/mongodb-document/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">Close</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              rel="noopener noreferrer"
+              target="_blank"
+              >
+              RSS
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'flyman';
+    
+    var disqus_url = 'http://fengjianque.github.io/2017/02/06/mongodb-index/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//flyman.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
