@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>MongoDB：锁和并发控制 | Hexo</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术," />
+  
+
+  <meta name="description" content="MongoDB：锁和并发控制本文主要介绍两部分内容，第一部分是MongoDB的锁，第二部分是MongoDB的并发控制。这都跟MongoDB性能和效率相关的，有助于在使用MongoDB过程中，知道哪些操作会带来怎样效率的影响。第二部分从业务层面出发介绍并发控制的方法,基本上都是开发中碰到的常见场景。
+MongoDB锁###锁类型Mongodb使用的是read-write读写锁，允许多个读者并发的加共">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MongoDB：锁和并发控制">
+<meta property="og:url" content="http://fengjianque.github.io/2017/02/06/mongodb-lock/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="MongoDB：锁和并发控制本文主要介绍两部分内容，第一部分是MongoDB的锁，第二部分是MongoDB的并发控制。这都跟MongoDB性能和效率相关的，有助于在使用MongoDB过程中，知道哪些操作会带来怎样效率的影响。第二部分从业务层面出发介绍并发控制的方法,基本上都是开发中碰到的常见场景。
+MongoDB锁###锁类型Mongodb使用的是read-write读写锁，允许多个读者并发的加共">
+<meta property="og:updated_time" content="2017-02-06T15:12:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MongoDB：锁和并发控制">
+<meta name="twitter:description" content="MongoDB：锁和并发控制本文主要介绍两部分内容，第一部分是MongoDB的锁，第二部分是MongoDB的并发控制。这都跟MongoDB性能和效率相关的，有助于在使用MongoDB过程中，知道哪些操作会带来怎样效率的影响。第二部分从业务层面出发介绍并发控制的方法,基本上都是开发中碰到的常见场景。
+MongoDB锁###锁类型Mongodb使用的是read-write读写锁，允许多个读者并发的加共">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=07a1c304" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            rel="noopener noreferrer"
+            target="_blank"
+            >
+            RSS
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MongoDB：锁和并发控制"><span class="toc-text">MongoDB：锁和并发控制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MongoDB锁"><span class="toc-text">MongoDB锁</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#锁的粒度"><span class="toc-text">锁的粒度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查看锁的状态"><span class="toc-text">查看锁的状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#产生加锁的操作"><span class="toc-text">产生加锁的操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#管理命令数据库锁"><span class="toc-text">管理命令数据库锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#锁多个数据库的全局锁"><span class="toc-text">锁多个数据库的全局锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#分片上锁和并发"><span class="toc-text">分片上锁和并发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#副本集主节点上的锁和并发"><span class="toc-text">副本集主节点上的锁和并发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#副本集次级节点上的锁和并发"><span class="toc-text">副本集次级节点上的锁和并发</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MongoDB并发控制方法"><span class="toc-text">MongoDB并发控制方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#原子操作"><span class="toc-text">原子操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#isolated"><span class="toc-text">$isolated</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#使用唯一性索引"><span class="toc-text">使用唯一性索引</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#事务"><span class="toc-text">事务</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#update-if-current"><span class="toc-text">update if current</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#两阶段提交事务"><span class="toc-text">两阶段提交事务</span></a></li></ol></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-mongodb-lock" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">MongoDB：锁和并发控制</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.02.06</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>Flyman</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/category/未分类/">未分类</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://fengjianque.github.io/2017/02/06/mongodb-lock/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="MongoDB：锁和并发控制"><a href="#MongoDB：锁和并发控制" class="headerlink" title="MongoDB：锁和并发控制"></a>MongoDB：锁和并发控制</h1><p>本文主要介绍两部分内容，第一部分是MongoDB的锁，第二部分是MongoDB的并发控制。这都跟MongoDB性能和效率相关的，有助于在使用MongoDB过程中，知道哪些操作会带来怎样效率的影响。第二部分从业务层面出发介绍并发控制的方法,基本上都是开发中碰到的常见场景。</p>
+<h2 id="MongoDB锁"><a href="#MongoDB锁" class="headerlink" title="MongoDB锁"></a>MongoDB锁</h2><p>###锁类型<br>Mongodb使用的是read-write读写锁，允许多个读者并发的加共享锁访问同一资源，而同一时间只允许一个写者加排它锁改变资源，此时不允许其它的读和写。<br>在mongodb中，还使用了意向锁（IS、IX）提高加锁性能。为了提高吞吐率，在等待排队的锁中，排在最前面的如果是共享锁，会一次把队列中所有的共享锁都加上，释放之后就处理排他锁。而不是当前是共享锁，后面一来共享锁请求都加上去，后面的请求是要排队的，避免写锁的饥饿。</p>
+<h3 id="锁的粒度"><a href="#锁的粒度" class="headerlink" title="锁的粒度"></a>锁的粒度</h3><p>mongodb普遍使用全局锁、数据库锁。还允许自己使用不同存储引擎，实现更细粒度的锁控制。比如MMAPv1存储引擎支持表锁，WiredTiger存储引擎，支持文档级别的锁。</p>
+<p>在 2.2 版本以前，mongodb只有<strong>全局锁</strong>；也就是对整个mongodb实例加锁，这个粒度是很大的。</p>
+<p>从 2.2 版本开始，大部分读写操作只锁一个库，库级别锁相对之前版本，这个粒度已经下降。对于一些涉及到多个数据库操作，还需要加全局锁。目前MongoDB常见的版本是2.6、2.7，锁粒度只到collection。</p>
+<p>从 3.0 开始，如果使用MMAPv1存储引擎，最细粒度支持 <strong>collection级别的锁</strong> ，对于一个数据库里面的collection，对一个collection的加锁操作，不影响其他collection的操作。</p>
+<h3 id="查看锁的状态"><a href="#查看锁的状态" class="headerlink" title="查看锁的状态"></a>查看锁的状态</h3><ul>
+<li><a href="http://docs.mongodb.org/v2.6/reference/command/serverStatus/" target="_blank" rel="external">db.serverStatus()</a></li>
+<li><a href="http://docs.mongodb.org/v2.6/reference/method/db.currentOp/#db.currentOp" target="_blank" rel="external">db.currentOp()</a></li>
+<li>mongotop</li>
+<li>mongostat</li>
+</ul>
+<h3 id="产生加锁的操作"><a href="#产生加锁的操作" class="headerlink" title="产生加锁的操作"></a>产生加锁的操作</h3><table>
+<thead>
+<tr>
+<th>操作</th>
+<th>锁类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>query</td>
+<td>读锁</td>
+</tr>
+<tr>
+<td>cursor get more</td>
+<td>读锁</td>
+</tr>
+<tr>
+<td>insert</td>
+<td>写锁</td>
+</tr>
+<tr>
+<td>remove</td>
+<td>写锁</td>
+</tr>
+<tr>
+<td>update</td>
+<td>写锁</td>
+</tr>
+<tr>
+<td>Map-reduce</td>
+<td>读锁和写锁，除非Map-reduce操作被声明为非原子性的。部分map-reduce任务能够并发的执行。</td>
+</tr>
+<tr>
+<td>createIndex</td>
+<td>创建索引操作默认在前台执行，会长时间锁住数据库。</td>
+</tr>
+<tr>
+<td>db.eval()</td>
+<td>写锁 db.eval()会加全局写锁，会阻塞其他的读写操作。加上参数nolock: true，表示不加锁。</td>
+</tr>
+<tr>
+<td>eval</td>
+<td>写锁. 同db.eval()</td>
+</tr>
+<tr>
+<td>aggregate()</td>
+<td>读锁</td>
+</tr>
+</tbody>
+</table>
+<p>###读和写操作让出锁<br>在需要长时间读和非原子写的操作，在一些条件下会让出所占的锁。比如update更新多个文档时候，就有可能在中间让出锁。Mongodb使用一种自适应的算法基于预测磁盘访问（比如缺页中断）方式决定是否让出锁。Monodb在读之前预测所需要的数据是否在内存中，如果预测不在内存中则让出锁，等数据加载后，重新请求上锁来完成操作。在2.6版本以后，对于索引，就算不在内存中，也不让出锁。</p>
+<h3 id="管理命令数据库锁"><a href="#管理命令数据库锁" class="headerlink" title="管理命令数据库锁"></a>管理命令数据库锁</h3><p>在运行下面的管理命令，需要长时间占锁进行操作：</p>
+<ul>
+<li>db.collection.createIndex(), 如果没有设置background:true参数,长时间锁住数据库。</li>
+<li>reIndex；</li>
+<li>compact；</li>
+<li>db.repairDatabase(),</li>
+<li>db.createCollection(), 比如要创建很大的固定空间capped collection时候；</li>
+<li>db.collection.validate(), 返回磁盘信息；</li>
+<li>db.copyDatabase(). 会锁住多个数据库。</li>
+</ul>
+<p>对于上面的操作如果有副本集，建议将其中的一个副本下线后进行操作，这样就不会影响上线服务。</p>
+<p>下面的管理命令只占短时间锁数据库：</p>
+<ul>
+<li>db.collection.dropIndex(),</li>
+<li>db.getLastError(),</li>
+<li>db.isMaster(),</li>
+<li>rs.status()，</li>
+<li>db.serverStatus(),</li>
+<li>db.auth(),</li>
+<li>db.addUser()</li>
+</ul>
+<h3 id="锁多个数据库的全局锁"><a href="#锁多个数据库的全局锁" class="headerlink" title="锁多个数据库的全局锁"></a>锁多个数据库的全局锁</h3><ul>
+<li>db.copyDatabase() 全局锁，锁整个monogdb的实例，不允许读写。</li>
+<li>db.repairDatabase() 全局写锁。</li>
+<li>Journaling，如果开启了Journaling功能，在记录日志时会很短时间锁住所有的数据库。所有的数据库共享一个journaling。<br>对副本集主节点的所有写操作不仅会锁住目标库，也会锁住local库很小一段时间。通过Local库上的锁， mongod进程可以往主节点的oplog 表写数据，以及一些认证操作，不过这些都只占整个写操作时间的很少一部分。</li>
+</ul>
+<h3 id="分片上锁和并发"><a href="#分片上锁和并发" class="headerlink" title="分片上锁和并发"></a>分片上锁和并发</h3><p>分片通过在多个mongod实例部署分布式集合来提高并发的性能，允许分片服务器(比如mongos进程)访问多个mongd实例执行任意数量的并发操作。</p>
+<p>mongod实例之间是相互独立的，并且使用的是MongoDB多读单写锁。mongod实例上的操作不会阻塞其它实例。</p>
+<h3 id="副本集主节点上的锁和并发"><a href="#副本集主节点上的锁和并发" class="headerlink" title="副本集主节点上的锁和并发"></a>副本集主节点上的锁和并发</h3><p>在副本集中，当往主节点上某个表写入时，MongoDB也会对主节点的oplog进行写入，这是local库上一个特殊的表。因此，MongoDB会锁住目标表的库和local库。mongod进程会锁住这两个库来保证数据一致性，让这两个库的写操作要么全执行要么全不执行。</p>
+<h3 id="副本集次级节点上的锁和并发"><a href="#副本集次级节点上的锁和并发" class="headerlink" title="副本集次级节点上的锁和并发"></a>副本集次级节点上的锁和并发</h3><p>在副本集中，次级节点会分批的收集oplog信息，这些批次的回写是并行执行的。当在进行写操作时，次级节点上的数据是不可读的，回写操作会按照oplog记录的顺序执行。</p>
+<p>MongoDB允许副本集次级节点上的几个写操作并行执行，分两个阶段：<br>第一个阶段，通过一个读锁，mongod确保所有与写操作有关数据都存在于内存中。在这个阶段，其它客户端可以在这个节点上做查询操作。<br>第二阶段Mongodb会使用一个线程池使用写锁允许所有的写操作相互协调的成批写入。</p>
+<h2 id="MongoDB并发控制方法"><a href="#MongoDB并发控制方法" class="headerlink" title="MongoDB并发控制方法"></a>MongoDB并发控制方法</h2><p>Mongodb不支持事务，这是Mongodb的缺陷，要达到业务方面实现并发，保证数据的一致性，要使用一些并发的控制方法。</p>
+<h3 id="原子操作"><a href="#原子操作" class="headerlink" title="原子操作"></a>原子操作</h3><p>mongodb对单个文档的写都是原子操作，就算修改一个文档里面的多个内嵌文档也算修改一个文档，也是原子操作。<br>当一次写操作中要修改多个文档，每个文档的写操作是原子的，但整个操作不是原子的，期间会让出锁，允许其他线程操作。<br>使用update和findAndModify方法，如果都只对一个文档进行操作，那么都是原子的。区别是返回的内容不一样，findAndModify还可以返回当前改完之后的文档，这个在很多场景很有用，比如实现一个自动增长的id。如果用update，然后findOne就不能保证返回的结果是刚刚更新后的记录，可能别的线程又修改了。</p>
+<h3 id="isolated"><a href="#isolated" class="headerlink" title="$isolated"></a>$isolated</h3><p>Mongodb中有个$isolated操作符，可以隔离其他的线程。 使用$isolate操作符时，可以阻止一次写多个文档中让出锁，直到操作完成或者出错。<br>但是$isolate也无法保证多个文档修改的原子性(all-or-nothing），$isolate操作如果在写过程中出错，是不会回滚的，也就是存在只修改部分文档的情况。可以这么说$isolated操作符只提供隔离性，但不保证原子性。<br><strong>操作符$isolated不能在分片上工作。</strong><br>下面是使用$isolated操作符进行update的例子：</p>
+<pre><code>db.test.update(
+    { age : {$gt:30} , $isolated : 1 },
+    { $inc : { score : 1 } },
+    { multi: true }
+)
+</code></pre><p>当执行此操作时，其他线程就阻塞了，直到把所有操作更新完。这个操作会锁数据库比较长的时间，影响并发的效率，注意进行权衡。</p>
+<h4 id="使用唯一性索引"><a href="#使用唯一性索引" class="headerlink" title="使用唯一性索引"></a>使用唯一性索引</h4><p>当你想要创建某个字段唯一的文档时候，在多线程环境下，使用先查询为空再插入的方法，仍会导致相同的字段记录产生。解决的方法是在这个字段上建一个唯一的索引，在插入相同的字段时，会raise duplicate index key error。</p>
+<pre><code>db.members.createIndex( { &quot;name&quot;: 1 }, { unique: true } )
+</code></pre><p>上面创建了一个name字段的唯一索引。<br>然后使用操作insert或者update方法增加和修改文档，捕捉raise的duplicate index key错误，判断是否操作成功。比如使用update操作：</p>
+<pre><code>db.people.update(
+   { name: &quot;cf&quot; },
+   {
+      name: &quot;cf&quot;,
+      age: 18,
+      score: 100,
+   },
+   { upsert: true }
+)
+</code></pre><p>用upsert参数表明如果不存在则进行插入操作，这样做能保证name字段的值是唯一的，即便在多线程环境中。</p>
+<h3 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h3><p>如果文档的内容有两个field，A和B，现在想根据B的值进行修改A的值，比如（A=B+N），也就是需要知道field B的内容，才能进行A修改。这时候使用update和findAndiModify就做不到了。<br>有两种方法。<br>一种是两阶段提交事务语义(two-phase commit)方法，另外一种是update if current。</p>
+<h4 id="update-if-current"><a href="#update-if-current" class="headerlink" title="update if current"></a>update if current</h4><p>update if current是用手动的方式保证原子性，类似于CPU中常见的同步原语:比较和交换cas（Compare &amp; Swap）操作，原理如下：<br>1、获取需要更新的记录，并记录A字段的值，oldvalue；<br>2、本地修改好要更新的字段A；<br>3、使用update操作修改A字段值，但是查询条件必须是A字段的值==oldvalue。<br>下面举例说明：</p>
+<pre><code>var myDocument = db.test.findOne( { name: &apos;cf&apos; } );
+
+if (myDocument) {
+
+  var oldValue = myDocument.score;
+  var age = myDocument.age
+
+  if (myDocument.score &lt; 10) {
+          myDocument.score *= 5;
+  } else {
+      myDocument.score = age * 1.5;
+  }
+
+  var results = db.test.update(
+     {
+       name: myDocument.name,
+       score: oldValue
+     },
+     {
+       $set: { score: myDocument.score }
+     }
+  );
+
+  if ( results.hasWriteError() ) {
+      print(&quot;unexpected error updating document: &quot; + tojson( results ));
+  } else if ( results.nMatched == 0 ) {
+      print(&quot;No update: no matching document for { name: &quot; + myDocument.name + &quot;, score: &quot; + oldValue + &quot; }&quot;)
+  }
+</code></pre><p>上面的例子，score的值修改，跟score本身、age值相关，这就需要先获取score、age的值，再进行修改。<br>你可以发现，这需要自己手动去检查有没有修改成功，如果不成功还需自己去控制再次尝试更新。</p>
+<h4 id="两阶段提交事务"><a href="#两阶段提交事务" class="headerlink" title="两阶段提交事务"></a>两阶段提交事务</h4><p>第一个阶段尝试进行提交，第二个阶段正式提交。这样，即使更新数据时发生故障，我们也能知道数据都处于什么状态，总是能够把数据恢复到更新之前的状态。原理是使用一个表来记录事务transaction，保存可能的状态inital、pending、applied、done、canceling、canceled；要进行更新的collection的记录中增加一个类型为列表pendingTransactions字段，用来绑定正在执行的transaction id。通过修改transaction里面记录的状态，确保事务执行的阶段，这样在发生故障时就知道transaction处于哪个阶段，从而resume或者rollback。<br>具体例子可以看文档：<a href="http://docs.mongodb.org/manual/tutorial/perform-two-phase-commits/" target="_blank" rel="external">Two Phase Commits
+</a><br>两阶段提交方法达到事务一致性，我个人觉的还是比较麻烦，这也是mongodb的缺陷所在。</p>
+<p>参考文档：<br><a href="http://askasya.com/post/findandmodify" target="_blank" rel="external">http://askasya.com/post/findandmodify</a><br><a href="http://docs.mongodb.org/v2.6/faq/concurrency/" target="_blank" rel="external">http://docs.mongodb.org/v2.6/faq/concurrency/</a><br><a href="http://docs.mongodb.org/manual/core/write-operations-atomicity/" target="_blank" rel="external">http://docs.mongodb.org/manual/core/write-operations-atomicity/</a></p>
+
+    
+  </div>
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持flyman</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/02/06/mongodb-index/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              rel="noopener noreferrer"
+              target="_blank"
+              >
+              RSS
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'flyman';
+    
+    var disqus_url = 'http://fengjianque.github.io/2017/02/06/mongodb-lock/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//flyman.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

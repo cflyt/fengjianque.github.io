@@ -179,7 +179,7 @@
 
 
   <div id="toc" class="toc-article">
-    <strong class="toc-title">Posts List</strong>
+    <strong class="toc-title">文章目录</strong>
     <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Mongdb：索引优化和工具"><span class="toc-text">Mongdb：索引优化和工具</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-索引的相关操作和复合索引"><span class="toc-text">1 索引的相关操作和复合索引</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-关于索引的基本操作"><span class="toc-text">1.1 关于索引的基本操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-Mongodb-复合索引"><span class="toc-text">1.2 Mongodb 复合索引</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-优化原理"><span class="toc-text">2 优化原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-查询索引优化原理"><span class="toc-text">2.1 查询索引优化原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#explain"><span class="toc-text">explain()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范围查询"><span class="toc-text">范围查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范围查询-等值查询"><span class="toc-text">范围查询+等值查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范围查询-排序"><span class="toc-text">范围查询+排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#等值查询-范围查询-排序"><span class="toc-text">等值查询+范围查询+排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-mongodb查询优化器原理"><span class="toc-text">2.2 mongodb查询优化器原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-总结优化策略"><span class="toc-text">2.3 总结优化策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Mongodb索引优化工具"><span class="toc-text">3 Mongodb索引优化工具</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-Profiler"><span class="toc-text">3.1 Profiler</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#开启Profiling"><span class="toc-text">开启Profiling</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Profiling记录"><span class="toc-text">Profiling记录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Profiling效率"><span class="toc-text">Profiling效率</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#工作过程"><span class="toc-text">工作过程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#优化标准"><span class="toc-text">优化标准</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Dex的使用"><span class="toc-text">Dex的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#安装"><span class="toc-text">安装</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#启动Dex"><span class="toc-text">启动Dex</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#过滤器"><span class="toc-text">过滤器</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#监控模式"><span class="toc-text">监控模式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#分析输出"><span class="toc-text">分析输出</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-建议"><span class="toc-text">4 建议</span></a></li></ol></li></ol>
   </div>
 
@@ -550,7 +550,7 @@ millis: 该命令执行耗时，以毫秒记
     <a class="show pull-left" href="/2017/02/06/mongodb-document/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2017/02/06/mongodb-lock/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>
@@ -572,7 +572,7 @@ millis: 该命令执行耗时，以毫秒记
   <span id="cover" class="cover hide"></span>
   <div id="modal-dialog" class="modal-dialog hide-dialog">
     <div class="modal-header">
-      <span id="close" class="btn-close">Close</span>
+      <span id="close" class="btn-close">关闭</span>
     </div>
     <hr>
     <div class="modal-body">
