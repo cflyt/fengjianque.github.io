@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>ext4文件系统 | Hexo</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术," />
+  
+
+  <meta name="description" content="ext4文件系统linux的拓展文件系统，从第一代ext为人们所熟知，经过ext2、ext3、ext4发展，逐步成为linux上首选的文件系统，目前比较常用的是ext3和ext4，ext3的用户也将慢慢升级到ext4。本文介绍这两个文件系统的区别，ext4在ext3的基础上做了哪些改进，中间穿插一些文件系统基础知识，希望通过本文大家能对ext4有大致的了解。
+磁盘布局在了解文件系统前，先简单了解下">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ext4文件系统">
+<meta property="og:url" content="http://fengjianque.github.io/2017/02/07/ext4/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="ext4文件系统linux的拓展文件系统，从第一代ext为人们所熟知，经过ext2、ext3、ext4发展，逐步成为linux上首选的文件系统，目前比较常用的是ext3和ext4，ext3的用户也将慢慢升级到ext4。本文介绍这两个文件系统的区别，ext4在ext3的基础上做了哪些改进，中间穿插一些文件系统基础知识，希望通过本文大家能对ext4有大致的了解。
+磁盘布局在了解文件系统前，先简单了解下">
+<meta property="og:image" content="http://g.fp.ps.netease.com/nanny/file/571326f8143cfa8706553e71YAU0RUqA">
+<meta property="og:image" content="http://g.fp.ps.netease.com/nanny/file/5713315e143cfabdb71b9fa3IYbJE8lV">
+<meta property="og:image" content="http://g.fp.ps.netease.com/nanny/file/57134032143cfaf83b22ee00fxoJGr6L">
+<meta property="og:image" content="http://g.fp.ps.netease.com/nanny/file/571367c15e60275cb8fa8f20xTS85U8p">
+<meta property="og:image" content="http://g.fp.ps.netease.com/nanny/file/57136c8e143cfa832aab26a5Tphi7qE2">
+<meta property="og:image" content="http://g.fp.ps.netease.com/nanny/file/57144dea5e602729d280095cbzGs7h2v">
+<meta property="og:image" content="http://g.fp.ps.netease.com/nanny/file/57148e5a96dee481ca2c0b26ieO8WaAd">
+<meta property="og:updated_time" content="2017-02-07T02:49:23.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ext4文件系统">
+<meta name="twitter:description" content="ext4文件系统linux的拓展文件系统，从第一代ext为人们所熟知，经过ext2、ext3、ext4发展，逐步成为linux上首选的文件系统，目前比较常用的是ext3和ext4，ext3的用户也将慢慢升级到ext4。本文介绍这两个文件系统的区别，ext4在ext3的基础上做了哪些改进，中间穿插一些文件系统基础知识，希望通过本文大家能对ext4有大致的了解。
+磁盘布局在了解文件系统前，先简单了解下">
+<meta name="twitter:image" content="http://g.fp.ps.netease.com/nanny/file/571326f8143cfa8706553e71YAU0RUqA">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=07a1c304" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            rel="noopener noreferrer"
+            target="_blank"
+            >
+            RSS
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#ext4文件系统"><span class="toc-text">ext4文件系统</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#磁盘布局"><span class="toc-text">磁盘布局</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ext3-布局"><span class="toc-text">ext3 布局</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ext4磁盘布局"><span class="toc-text">ext4磁盘布局</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#inode"><span class="toc-text">inode</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ext3文件寻址"><span class="toc-text">ext3文件寻址</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ext4文件寻址"><span class="toc-text">ext4文件寻址</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#目录索引"><span class="toc-text">目录索引</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ext4更多特性"><span class="toc-text">ext4更多特性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-ext4" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">ext4文件系统</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.02.07</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>Flyman</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/category/未分类/">未分类</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://fengjianque.github.io/2017/02/07/ext4/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="ext4文件系统"><a href="#ext4文件系统" class="headerlink" title="ext4文件系统"></a>ext4文件系统</h1><p>linux的拓展文件系统，从第一代ext为人们所熟知，经过ext2、ext3、ext4发展，逐步成为linux上首选的文件系统，目前比较常用的是ext3和ext4，ext3的用户也将慢慢升级到ext4。本文介绍这两个文件系统的区别，ext4在ext3的基础上做了哪些改进，中间穿插一些文件系统基础知识，希望通过本文大家能对ext4有大致的了解。</p>
+<h2 id="磁盘布局"><a href="#磁盘布局" class="headerlink" title="磁盘布局"></a>磁盘布局</h2><p>在了解文件系统前，先简单了解下磁盘是怎样布局的。磁盘都会进行逻辑空间划分，分为一个个分区，有GPT和MBR划分机制，本文介绍MBR机制，磁盘被分成最多4个分区；下图一个磁盘被分为3个主分区和一个拓展分区，每个分区包含boot block部分；拓展分区拓展了区域，称为逻辑分区；MBR部分是整个系统的开始部分，包括引导程序boot code和分区表信息。</p>
+<p><img src="http://g.fp.ps.netease.com/nanny/file/571326f8143cfa8706553e71YAU0RUqA" alt=""></p>
+<p>MBR引导程序通过分区表找到一个活动的分区表，将活动分区的启动程序从设备加载到RAM并且执行，该程序负责进一步的操作系统的加载和启动。</p>
+<p>一个文件系统使用一个独立的分区，不同的分区可以使用不同的文件系统，linux只有一个根目录「/」，其他分区是需要挂在根目录下面某个目录才能使用。</p>
+<p>磁盘在物理上将一段范围磁柱划分为数据块，一个块究竟多大是在格式化时确定的，例如mke2fs的-b选项可以设定块大小为1024、2048或4096字节，默认为4KB。</p>
+<h3 id="ext3-布局"><a href="#ext3-布局" class="headerlink" title="ext3 布局"></a>ext3 布局</h3><p>磁盘分区好之后，就能在分区上创建文件系统了。一个分区格式化成ext3文件系统，磁盘的布局如下图：</p>
+<p><img src="http://g.fp.ps.netease.com/nanny/file/5713315e143cfabdb71b9fa3IYbJE8lV" alt=""></p>
+<p>文件系统最前面有一个启动扇区(boot block)，这个启动块可以安装启动管理程序，这是个非常重要的设计，因为如此一来我们就能够将不同的启动管理程序安装到个别的文件系统最前端，而不用覆盖唯一的 MBR。</p>
+<ul>
+<li>Super Block： 大小为1k，Superblock 是记录整个 filesystem 相关信息的地方，超级块位于每个块组的最前面，每个块组包含超级块的内容是相同的(超级块在每个块组的开头都有一份拷贝)；下图是super block的内容</li>
+</ul>
+<p><img src="http://g.fp.ps.netease.com/nanny/file/57134032143cfaf83b22ee00fxoJGr6L" alt=""></p>
+<ul>
+<li><p>GDT：块组描述符表，由很多块组描述符组成，Linux组描述符为32字节，整个分区分成多少个块组就对应有多少个块组描述符；和超级块类似，块组描述符表在每个块组的开头也都有一份拷贝，具有相同内容的组描述符表放在每个块组中做为备份，这些信息是非常重要的。</p>
+</li>
+<li><p>Block Bitmap：块位图，用来描述本块组中数据块的使用状况，它本身占一个数据块。</p>
+</li>
+<li>Inode Bitmap：inode位图，和块位图类似，本身占一个块，其中每个bit表示一个inode是否空闲可用。</li>
+<li>Inode Table：inode表，存储本块组的inode序号和inode保存的位置。</li>
+<li>Data block： 存放数据的地方；</li>
+</ul>
+<h3 id="ext4磁盘布局"><a href="#ext4磁盘布局" class="headerlink" title="ext4磁盘布局"></a>ext4磁盘布局</h3><p>ext4基本磁盘布局跟ext3的基本差不多，都是以块组管理，但有增加了一些特性。</p>
+<ol>
+<li><p>Flexible 块组<br>如果开启flex_bg特性，在一个flex_bg中，几个块组在一起组成一个逻辑块组flex_bg。flex_bg的第一个块组中的位图空间和inode表空间扩大为包含了flex_bg中其他块组上位图和inode表。如下图flex_bg包含4个块组，块组0将按序包含超级块、块组描述符表、块组0-3的数据块位图、块组0-3的inode位图、块组0-3的inode表，块组0中的其他空间用于存储文件数据。同时，其他块组上的数据块位图、inode位图、inode表元数据就不存在了，但是Super Block和GDT还是存在的。</p>
+<p> <img src="http://g.fp.ps.netease.com/nanny/file/571367c15e60275cb8fa8f20xTS85U8p" alt=""></p>
+<p> Flexible块组的作用是：<br> (1)  聚集元数据，加速元数据载入；<br> (2)  使得大文件在磁盘上尽量连续；<br> 最终目的都是减少磁盘寻道时间；</p>
+</li>
+<li><p>元块组 Meta Block Groups<br>以ext4为例，一个Block Group的大小为默认大小为127MB，Ext4的块组描述符大小64 Bytes计算，文件系统中最多只能有2^21个块组，也就是文件系统最大为256TB。<br>如果打开META_BG的选项，ext4文件系统将被分成多个metablock groups。每个metablock group是block groups的集合。对于block size 为4KB的ext4文件系统，一个metablock group包含64个block group = 8GB，GDT将存储在medablock group中的第一个block group中，并且在medablock group中第二和最后一个作备份。这种方式即可以实现消除中256T的限制，即2^32 *2^27=512PB。</p>
+</li>
+</ol>
+<h3 id="inode"><a href="#inode" class="headerlink" title="inode"></a>inode</h3><p>一个文件除了自身的数据之外，还有一个附属信息，即文件的元数据(metadata)。这个元数据用于记录文件的许多信息，比如文件大小，拥有人，所属的组，修改日期等等。元数据并不包含在文件的数据中，而是由文件系统维护的，这些数据就保存在inode中，当然inode内容也保存在data block中。我们可以用 <code>ls -l filename</code> 来查看这些元数据。</p>
+<p>inode保存的主要信息：</p>
+<ul>
+<li>该文件的存取模式(read/write/excute)；</li>
+<li>该文件的拥有者与群组(owner/group)；</li>
+<li>该文件的容量；</li>
+<li>该文件创建或状态改变的时间(ctime)；</li>
+<li>最近一次的读取时间(atime)；</li>
+<li>最近修改的时间(mtime)；</li>
+<li>定义文件特性的旗标(flag)，如 SetUID…；</li>
+<li>该文件保存数据块的指针 (pointer)；</li>
+</ul>
+<p>inode节点大小是128字节，每个文件都必须占用一个inode，因此文件系统能够创建的文件数量与 inode 的数量有关， inode表占多少个块在格式化时就要决定并写入块组描述符中，mke2fs格式化工具的默认策略是一个块组有多少个8KB就分配多少个inode。</p>
+<p>inode保存了数据的存放block的指针，是怎么工作的呢，ext3和ext4又有所不同。</p>
+<h3 id="ext3文件寻址"><a href="#ext3文件寻址" class="headerlink" title="ext3文件寻址"></a>ext3文件寻址</h3><p><img src="http://g.fp.ps.netease.com/nanny/file/57136c8e143cfa832aab26a5Tphi7qE2" alt=""></p>
+<p>如上图所示，ext3包含了15个指针，12个直接指针，一个间接指针，一个二次间接指针，一个三次间接指针。</p>
+<p>这样子一个inode能够存多大的文件呢？我们以 4KB block 来说明好了，可以指定的情况如下：</p>
+<ul>
+<li><p>12个直接指向： 12*4K=48K；</p>
+</li>
+<li><p>间接： 1K * 4K = 4M；一个指针占4bytes，因此4KB的大小block能够存1K个指针，因此一个间接可以记录的文件大小为4M；</p>
+</li>
+<li><p>二次间接指针： 1K <em> 1K </em> 4K=4G<br>第一层 block 会指定 1K 个第二层，每个第二层可以指定 1K 个block；</p>
+</li>
+<li><p>三次间接指针： 1K <em> 1K </em> 1K * 4K = 4T；</p>
+</li>
+</ul>
+<h3 id="ext4文件寻址"><a href="#ext4文件寻址" class="headerlink" title="ext4文件寻址"></a>ext4文件寻址</h3><p>Ext3 采用间接索引映射，当操作大文件时，效率极其低下。比如一个 100MB 大小的文件，在 Ext3中要建立 25,600 个数据块（每个数据块大小为 4KB）的映射表。而 Ext4 引入了现代文件系统中流行的区段  <code>extents</code> 概念，每个 extent 为一组连续的数据块，上述文件则表示为“该文件数据保存在接下来的 25,600 个数据块中”，提高了不少效率。</p>
+<p><img src="http://g.fp.ps.netease.com/nanny/file/57144dea5e602729d280095cbzGs7h2v" alt=""></p>
+<p>如上图，区段extents根据内容分为索引节点 <code>extent_idx</code> ,内容叶子节点extent。extent内容包含了起始的block地址和length，length占16个字节，因此对于4KB的block，每个extent能定位128M连续的寻址空间。 inode默认有4个extent，每个extent可以直接指向一段连续的block；如果这4个extent不能满足文件大小，则extent变成<code>extent_idx</code>索引节点 , 像ext3间接索引一样，一级级拓展，形成一个BTree。</p>
+<p>使用区段分配数据块好处显而易见，减少了映射表项，还分配连续的空间，减少磁头的移动，增加效率，同时没有文件大小的限制。</p>
+<h4 id="目录索引"><a href="#目录索引" class="headerlink" title="目录索引"></a>目录索引</h4><p>前面我们说过，创建一个文件需要占用一个inode节点，和至少一个block。inode存元数据，block存文件内容，如果是目录呢？<br>目录也是一个文件，也需要分配一个inode节点，和至少一个block。不过block里面存储的是在这个目录下的文件名与该文件的inode编号。下面是 <code>/</code> 目录的数据块存储的entry项。</p>
+<table>
+<thead>
+<tr>
+<th>inode编号</th>
+<th>文件名</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>..</td>
+</tr>
+<tr>
+<td>655362</td>
+<td>home</td>
+</tr>
+<tr>
+<td>786433</td>
+<td>var</td>
+</tr>
+</tbody>
+</table>
+<p>当我们读取一个文件时/home/aa.txt，先找到 <code>/</code> 的inode，然后读入inode指向的数据块，找到 <code>home</code> entry, 从entry中获得并读入inode，再读入home的block，检索的aa.txt entry的inode编号，最后根据编号，读取aa.txt的文件内容。</p>
+<p>像ext2要检索目录下某个entry，就得顺序读入该目录指向的block，直到读到为止。线性检索时间复杂度为O(n)，在一个目录超过10000文件时，性能就会有影响。</p>
+<p>在ext3中，增加了dir_index特性，为一个目录下面的表项创建索引，提高目录和文件的检索速度，ext3中需要手动开启这个特性，ext4中默认开启这个特性。</p>
+<p>dir_index特性中，将目录下的文件名进行hash计算，以Hash Tree的组织保存在block中。</p>
+<p><img src="http://g.fp.ps.netease.com/nanny/file/57148e5a96dee481ca2c0b26ieO8WaAd" alt=""></p>
+<p>上图中一个目录下面的所有entry被组织成一颗平衡的hash tree。<br>树的根就是存储在目录的第一个数据块，即dx_root，其中叶节点存储的目录项的内容，当前目录项并非按照线性排序了，而是hash值处于某一个范围内的目录项存储在一个目录项块中；中间节点存储的是存储的是索引项，内容和第一个目录数据块块内容基本一致。</p>
+<p>当前每个索引项dx_entry占8个字节，索引树根部dx_root占32个字节，对于一个4KB大小的块，即如图的第一层索引，可以索引508个叶块或节点块，第二层索引可以索引511个块，那么目录索引树支持目录大小为508×511×4KB=1014MB，假定一个目录下文件名平均由22个字符长度，那么一个目录项即30B，那么二级索引树最大支持约34M个文件，即3400万个文件，满足了绝大部分的存储场景需求。</p>
+<p>ext3和ext4中都只支持二层索引，所以要查找一个目录entry，只需要读取3个数据块，速度快了很多。</p>
+<h3 id="ext4更多特性"><a href="#ext4更多特性" class="headerlink" title="ext4更多特性"></a>ext4更多特性</h3><ul>
+<li><p>向后和向前兼容性:可以将 ext3 文件系统挂载为 ext4 文件系统；可以将 ext4 挂载为 ext3（向后兼容），但前提是ext4 文件系统不能使用区段特性；</p>
+</li>
+<li><p>提高时间戳分辨率： ext4的时间戳精确到纳秒，而之前都是以秒来记录；</p>
+</li>
+<li><p>突破文件系统的限制： 从上面的分析可以看到，ext4它支持更大的文件系统、文件和子目录；</p>
+</li>
+<li><p>区段分配：ext3 使用空闲空间位映射来分配文件，这种方式不是很快，并且伸缩性不强。ext3 的格式对小文件而言是很高效的，但对于大文件则恰恰相反。ext4 使用区段取代 ext3 的机制，从而改善了空间的分配，并且支持更加高效的存储结构。ext4从分配上进行很多优化，尽量使文件聚集在相邻的块上。</p>
+<ul>
+<li><p>文件级预分配：<br>某些应用程序，比如数据库或内容流，要求将文件存储在相邻的块上（利用相邻块的读优化和最大化读的命令-块比率）。尽管区段能够将相邻块划分为片段，但另一种更强大的方法是按照所需的大小预分配比较大的相邻块（XFS 以前就是采用这种方法）。ext4 通过一个新的系统调用来实现这个目的，这个调用将按照特定的大小预分配并初始化文件。然后，您就可以写入必要的数据，并为数据提供不错的读性能。</p>
+</li>
+<li><p>延迟块分配：<br>另一个基于文件大小的优化是延迟分配。这种性能优化延迟磁盘上的物理块的分配，直到块被刷入到磁盘时才进行分配。这种优化的关键是延迟物理块的分配，直到需要在磁盘上写这些物理块时才对其进行分配并写到相邻的块。这类似于持久化预分配，惟一的区别是文件系统会自动执行这项任务。不过如果预先知道文件的大小时，持久化预分配是更好的选择。</p>
+</li>
+<li><p>多个块分配：<br>这是最后一个与相邻块相关的优化，即针对 ext4 的块分配器。在 ext3 中，块分配器的工作方式是每次分配一个块。当需要分配多个块时，非相邻块中可能存在相邻的数据。ext4 使用块分配器修复了这个问题，它能够在磁盘上一次分配多个块。与前面其他优化一样，这个优化在磁盘上收集相关的数据，以实现相邻读优化。</p>
+<p>  多个块分配的另一个方面是分配块时需要的处理量。记住，ext3 一次只分配一个块。在最简单的情况下，每个块的分配都要有一个调用。如果一次分配多个块，对块分配器的调用就会大大减少，从而加快分配并减少处理量。</p>
+</li>
+</ul>
+</li>
+<li><p>更加可靠：<br>  日志记录就是通过日记（磁盘上相邻区域的专门循环记录）记录文件系统的变更的过程。因此，根据日志对物理存储执行实际变更更加可靠，并且能够确保一致性，即使在操作期间出现系统崩溃或电源中断。这样做可以减少文件系统损坏的几率。</p>
+<p>  但是即使进行日志记录，如果日志出现错误仍然会导致文件系统损坏。为了解决这个问题，ext4 对日志执行校验和，确保有效变更能够在底层文件系统上正确完成。</p>
+</li>
+<li>在线磁盘碎片整理：<br> 尽管 ext4 添加一些特性来减少文件系统的碎片（比如将相邻块分配为区段），但随着系统使用时间的增加，碎片是难以完全避免的。因此出现了在线碎片整理工具，它们可以对文件系统和单个文件执行碎片整理，从而改善性能。</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>拓展文件系统发展到第4代，功能和性能优越毋容置疑，还在用ext3的都升级到4来吧~</p>
+
+    
+  </div>
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持flyman</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/02/07/nginx-cache/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              rel="noopener noreferrer"
+              target="_blank"
+              >
+              RSS
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'flyman';
+    
+    var disqus_url = 'http://fengjianque.github.io/2017/02/07/ext4/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//flyman.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
