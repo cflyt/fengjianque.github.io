@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Storm学习 | Hexo</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术," />
+  
+
+  <meta name="description" content="Storm学习背景在处理海量数据时，Hadoop是标配的技术框架，Hadoop以批处理的方式处理离线的数据，将数据切片计算，使用磁盘作为中间交换的介质。Hadoop不是一个实时计算的框架，不能计算源源不断实时输入的海量数据，并实时给出计算结果。所以在Hadoop之后出现S4，Storm，Spark，Puma等这些实时计算系统，弥补了这个缺陷。这些实时系统框架各有特点，本文介绍近来最流行的Storm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Storm学习">
+<meta property="og:url" content="http://fengjianque.github.io/2017/02/07/storm-learn/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Storm学习背景在处理海量数据时，Hadoop是标配的技术框架，Hadoop以批处理的方式处理离线的数据，将数据切片计算，使用磁盘作为中间交换的介质。Hadoop不是一个实时计算的框架，不能计算源源不断实时输入的海量数据，并实时给出计算结果。所以在Hadoop之后出现S4，Storm，Spark，Puma等这些实时计算系统，弥补了这个缺陷。这些实时系统框架各有特点，本文介绍近来最流行的Storm">
+<meta property="og:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_2.png">
+<meta property="og:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_9.png">
+<meta property="og:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150914_15.png">
+<meta property="og:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_13.png">
+<meta property="og:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_14.png">
+<meta property="og:updated_time" content="2017-02-07T02:31:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Storm学习">
+<meta name="twitter:description" content="Storm学习背景在处理海量数据时，Hadoop是标配的技术框架，Hadoop以批处理的方式处理离线的数据，将数据切片计算，使用磁盘作为中间交换的介质。Hadoop不是一个实时计算的框架，不能计算源源不断实时输入的海量数据，并实时给出计算结果。所以在Hadoop之后出现S4，Storm，Spark，Puma等这些实时计算系统，弥补了这个缺陷。这些实时系统框架各有特点，本文介绍近来最流行的Storm">
+<meta name="twitter:image" content="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_2.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=07a1c304" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            rel="noopener noreferrer"
+            target="_blank"
+            >
+            RSS
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Storm学习"><span class="toc-text">Storm学习</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#背景"><span class="toc-text">背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Storm集群框架"><span class="toc-text">Storm集群框架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Topology"><span class="toc-text">Topology</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Tuple"><span class="toc-text">Tuple</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Spout"><span class="toc-text">Spout</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bolt"><span class="toc-text">Bolt</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Stream-Grouping"><span class="toc-text">Stream Grouping</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Topology-1"><span class="toc-text">Topology</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Storm并发模型"><span class="toc-text">Storm并发模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Storm单机模式搭建"><span class="toc-text">Storm单机模式搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#搭建Zookeeper集群"><span class="toc-text">搭建Zookeeper集群</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#安装依赖包"><span class="toc-text">安装依赖包</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#下载并解压缩Storm包"><span class="toc-text">下载并解压缩Storm包</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#修改storm-yaml配置"><span class="toc-text">修改storm.yaml配置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#启动storm"><span class="toc-text">启动storm</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#WordCount实例"><span class="toc-text">WordCount实例</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#打包Topology例子"><span class="toc-text">打包Topology例子</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#提交Topology到Storm"><span class="toc-text">提交Topology到Storm</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考文献"><span class="toc-text">参考文献</span></a></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-storm-learn" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Storm学习</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.02.07</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>Flyman</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/category/未分类/">未分类</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://fengjianque.github.io/2017/02/07/storm-learn/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="Storm学习"><a href="#Storm学习" class="headerlink" title="Storm学习"></a>Storm学习</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在处理海量数据时，Hadoop是标配的技术框架，Hadoop以批处理的方式处理<strong>离线的数据</strong>，将数据切片计算，使用磁盘作为中间交换的介质。Hadoop不是一个实时计算的框架，不能计算源源不断实时输入的海量数据，并实时给出计算结果。所以在Hadoop之后出现S4，Storm，Spark，Puma等这些实时计算系统，弥补了这个缺陷。这些实时系统框架各有特点，本文介绍近来最流行的Storm框架。</p>
+<p>Storm是一个免费开源、分布式、高容错的实时计算系统。Storm令持续不断的流计算变得容易，弥补了Hadoop批处理所不能满足的实时要求。Storm常见的使用场景：</p>
+<ul>
+<li>流数据处理：Storm可以用来处理源源不断流进来的消息，对这些数据进行实时分析、持续计算，处理之后将结果写入到某个存储中去（Storm不负责存储）。</li>
+<li>分布式rpc：由于Storm的处理组件是分布式的，而且处理延迟极低，所以可以作为一个通用的分布式rpc框架实现实时业务查询。</li>
+</ul>
+<p>比如你需要从日志数据中统计一个论坛过去5分钟讨论最热的帖子，Hadoop计算只能从已经保存在数据库里面日志里面统计，跑个job任务计算结果；如果是Storm，只需把实时的日志流输入到Storm框架中，就能获取统计结果。<br>你也许有疑问，<code>消息队列+worker</code>形式不就可以达到同样的要求么？事实上有很多时候实时统计都是采用这种简便的方式来实现的。但你会发现，如果实时统计需求比较多，处理比较复杂的场景下，系统需要维护一堆消息队列和消费者worker，这构成了非常复杂的系统结构。消费者worker从队列里取消息，处理完成后，去更新数据库，或者给其他队列发新消息。<br>这样进行实时处理是非常痛苦的。我们主要的精力都花在关注往哪里发消息，从哪里接收消息，消息如何序列化，真正的业务逻辑只占了一小部分。一个应用程序的逻辑运行在很多worker上，但这些worker需要各自单独部署，还需要部署消息队列。最大问题是系统很脆弱，而且不是容错的：需要自己保证消息队列和worker进程工作正常。<br>Storm完整地解决了这些问题。它是为分布式场景而生的，抽象了消息传递，会自动地在集群机器上并发地处理流式计算，让你专注于实时处理的业务逻辑。</p>
+<h2 id="Storm集群框架"><a href="#Storm集群框架" class="headerlink" title="Storm集群框架"></a>Storm集群框架</h2><p>Storm和Hadoop的MapReduce一样，有很好的水平扩展能力，伸缩性很强。它可以像Hadoop那样被部署在多台机器上，实现集群架构。下面是Storm集群的部件图：</p>
+<p><img src="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_2.png" alt=""></p>
+<p>Storm和Hadoop有很多的相像之处，下面是他们之间的角色对应：</p>
+<table>
+<thead>
+<tr>
+<th>对应关系</th>
+<th>Hadoop</th>
+<th>Storm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统角色</td>
+<td>JobTracker</td>
+<td>Nimbus</td>
+</tr>
+<tr>
+<td>系统角色</td>
+<td>TaskTracker</td>
+<td>Supervisor</td>
+</tr>
+<tr>
+<td>系统角色</td>
+<td>Child</td>
+<td>Worker</td>
+</tr>
+<tr>
+<td>应用名称</td>
+<td>Job</td>
+<td>Topology</td>
+</tr>
+<tr>
+<td>组件接口</td>
+<td>Mapper/Reducer</td>
+<td>Spout/Bolt</td>
+</tr>
+</tbody>
+</table>
+<p>在Storm的集群里面有两种节点：控制节点和工作节点；Zookeeper起协调作用，下面是集群中角色的描述：</p>
+<ul>
+<li>Nimbus： 控制节点上面运行一个叫Nimbus进程，Nimbus负责在集群里面分发代码，分配计算任务，并且监控状态。 全局只有一个。</li>
+<li>Supervisor： 每一个工作节点上面运行一个叫做Supervisor进程。Supervisor负责监听从Nimbus分配给它执行的任务，据此启动或停止执行任务的工作进程Worker;</li>
+<li>Zookeeper： Nimbus和Supervisor之间的所有协调工作都是通过Zookeeper集群完成。</li>
+<li>Topology：在Hadoop上面你运行的是MapReduce的Job, 而在Storm上面你运行的是Topology。</li>
+<li>Spout/Bolt: Topology的主要构成，是数据输入，处理的部件。</li>
+</ul>
+<p>Nimbus 后台程序和 Supervisor 后台程序都是快速失败(fail-fast)和无状态的，所有状态保存在Zookeeper 或本地磁盘中。<br>在这种设计中,控制节点并没有直接和工作节点通信,而是借助中介 Zookeeper, 这样一来可以分离<strong>控制节点</strong>和<strong>工作节点</strong>的依赖，将状态信息存放在Zookeeper集群内以快速恢复任何失败的一方。<br>这意味着你可以 kill 杀掉 Nimbus 进程和 Supervisor 进程，然后重启，它们将恢复状态并继续工作，这种设计使得Storm极其稳定。</p>
+<h2 id="Topology"><a href="#Topology" class="headerlink" title="Topology"></a>Topology</h2><p>本章主要介绍Storm中任务的设计思想，各组成部件。<br><img src="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_9.png" alt=""></p>
+<h3 id="Tuple"><a href="#Tuple" class="headerlink" title="Tuple"></a>Tuple</h3><p>Tuple是Storm提供的一个轻量级的数据格式，可以用来包装你需要实际处理的数据。Tuple是一次消息传递的基本单元。一个Tuple是一个命名的值列表，其中的每个值都可以是任意类型的。Tuple本来应该是一个Key-Value的Map，由于各个组件间传递的tuple的字段名称已经事先定义好了，所以Tuple只需要按序填入各个Value，所以就是一个Value List。<br>一个没有边界的、源源不断的、连续的Tuple序列就组成了Stream。</p>
+<h3 id="Spout"><a href="#Spout" class="headerlink" title="Spout"></a>Spout</h3><p>Storm为每个Stream都有一个源头，Spout会从外部读取流数据并发出Tuple。比如Spout可以从消息队列或者数据库中读取消息。Spout可以一次给多个Stream发出数据。</p>
+<h3 id="Bolt"><a href="#Bolt" class="headerlink" title="Bolt"></a>Bolt</h3><p>Storm 将流的中间状态转换抽象为Bolt，Bolt可以处理Tuple，同时它也可以发送新的流给其他Bolt使用。一个Bolt可以处理任意数量的输入流，产生任意数量新的输出流。Bolt可以做函数处理，过滤，流的合并，聚合，存储到数据库等操作。Bolt就是流水线上的一个处理单元，把数据的计算处理过程合理的拆分到多个Bolt、合理设置Bolt的task数量，能够提高Bolt的处理能力，提升流水线的并发度。</p>
+<h3 id="Stream-Grouping"><a href="#Stream-Grouping" class="headerlink" title="Stream Grouping"></a>Stream Grouping</h3><p>消息分发策略，即定义一个Stream应该如何分配给Bolt。目前有下面几种分发策略：</p>
+<ul>
+<li>洗牌分组(Shuffle grouping): 随机分配元组到Bolt的某个任务上，这样保证同一个Bolt的每个任务都能够得到相同数量的元组。</li>
+<li>字段分组(Fields grouping): 按照指定的分组字段来进行流的分组。例如，流是用字段“user-id”来分组的，那有着相同“user-id”的元组就会分到同一个任务里，但是有不同“user-id”的元组就会分到不同的任务里。</li>
+<li>Partial Key grouping: 跟字段分组一样，流也是用指定的分组字段进行分组的，但是在多个下游Bolt之间是有负载均衡的，这样当输入数据有倾斜时可以更好的利用资源。</li>
+<li>All grouping: 流会复制给Bolt的所有任务。小心使用这种分组方式。</li>
+<li>Global grouping: 整个流会分配给Bolt的一个任务。具体一点，会分配给有最小ID的任务。</li>
+<li>不分组(None grouping): 说明不关心流是如何分组的。目前，None grouping等价于洗牌分组。</li>
+<li>Direct grouping：直接分组,由Tuple的生产者来定义接收者。</li>
+<li>Local or shuffle grouping：如果目标Bolt在同一个worker进程里有一个或多个任务，元组就会通过洗牌的方式分配到这些同一个进程内的任务里。否则，就跟普通的洗牌分组一样。</li>
+</ul>
+<p>通过这些消息分发策略，Storm 解决了组件Spout和Bolt， Bolt和Bolt之间如何发送Tuple的问题。</p>
+<h3 id="Topology-1"><a href="#Topology-1" class="headerlink" title="Topology"></a>Topology</h3><p>Topology是Storm中最高层次的抽象概念，一个拓扑就是一个流转换图。一个拓扑是一个通过流分组(stream grouping)把Spout和Bolt连接到一起的拓扑结构。图的每条边代表一个Bolt订阅了其他Spout或者Bolt的输出流。一个拓扑就是一个复杂的多阶段的流计算。<br>一个Storm拓扑跟一个MapReduce的任务(job)概念是类似的。主要区别是：一个MapReduce Job最终会结束， 而一个Topology运永远运行（除非你显式的kill）。</p>
+<h2 id="Storm并发模型"><a href="#Storm并发模型" class="headerlink" title="Storm并发模型"></a>Storm并发模型</h2><p>上面介绍了控制节点Nimbus、工作节点Supervisor，工作进程Worker。一个Topology由Nimbus分发到Supervisor，Supervisor<strong>根据这个Topology里面的配置开启数量的Worker进程</strong>，这些Worker进程专门跑这个Topology。Topology里面有部件Spout，Bolt，这些部件可以配置<br>Executor和Task数量。Executor对应线程，Task对应部件的实例数量。 <strong>Executor的数量平均到每个Worker上，Task的数量平均分到Executor上</strong>。 下面图说明Worker、Executor、Task之间的关系。<br><img src="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150914_15.png" alt=""></p>
+<p>下面用一个例子说明。</p>
+<pre><code>Config conf = new Config();
+conf.setNumWorkers(2); // use two worker processes
+
+topologyBuilder.setSpout(&quot;blue-spout&quot;, new BlueSpout(), 2); // set parallelism hint to 2
+
+topologyBuilder.setBolt(&quot;green-bolt&quot;, new GreenBolt(), 2)  // set parallelism hint to 2
+               .setNumTasks(4)
+               .shuffleGrouping(&quot;blue-spout&quot;);
+
+topologyBuilder.setBolt(&quot;yellow-bolt&quot;, new YellowBolt(), 6)
+               .shuffleGrouping(&quot;green-bolt&quot;);
+
+StormSubmitter.submitTopology(
+        &quot;mytopology&quot;,
+        conf,
+        topologyBuilder.createTopology()
+    );
+</code></pre><p>上面代码配置后，得到的拓扑图如下：</p>
+<p><img src="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_13.png" alt=""></p>
+<p>上面例子中，整个拓扑配置2个Worker进程，那么各个部件并发情况如下：</p>
+<ul>
+<li>Blue Spout：配置parallelism为2，Task数量默认跟parallelism一致，所以2个Task分配到2个Executor，2个Executor分配到2各Worker上。那就是一个Worker运行一个Executor；</li>
+<li>Green Bolt： 设置parallelism为2，Task为4，那么一个Worker运行一个Executor，一个Executor运行2个Task(Bolt的实例)；</li>
+<li>Yellow Bolt：设置parallelism为6，那么一个Worker运行3个Executor，每个Executor运行一个Task。</li>
+</ul>
+<p>每个Worker会运行5个Task。</p>
+<p>Storm一个灵巧的功能是可以增减worker进程或者executor的数量而不需要重启集群或者拓扑。这种做法叫做rebalancing。有两种方法可以用来做拓扑的rebalance:</p>
+<ul>
+<li>使用Storm web UI来做</li>
+<li>使用命令行工具storm rebalance</li>
+</ul>
+<h3 id="Storm单机模式搭建"><a href="#Storm单机模式搭建" class="headerlink" title="Storm单机模式搭建"></a>Storm单机模式搭建</h3><p>Storm可以运行在单机上，作为集群模式的一个特例。Storm集群搭建主要包括以下步骤：</p>
+<p>1、搭建一个Zookeeper集群</p>
+<p>2、在nimbus、supervisor节点安装依赖包</p>
+<p>3、在nimbus、supervisor节点下载并解压缩Storm包</p>
+<p>4、修改nimbus、supervisor节点的配置文件（storm.yaml）</p>
+<p>5、使用storm脚本启动守护进程（包括nimbus、supervisor、ui）</p>
+<h5 id="搭建Zookeeper集群"><a href="#搭建Zookeeper集群" class="headerlink" title="搭建Zookeeper集群"></a>搭建Zookeeper集群</h5><p>从<a href="https://zookeeper.apache.org/releases.html#download" target="_blank" rel="external">Zookeeper官网</a>下载最新版Zookeeper。本文用的是3.4.6版本，zookeeper单机模式非常简单。</p>
+<pre><code>tar zxvf zookeeper-3.4.6.tar.gz
+cd zookeeper-3.4.6
+mv conf/zoo_sample.cfg conf/zoo.cfg
+bin/kServer.sh start
+</code></pre><p>这样就启动了Zookeeper服务。</p>
+<h4 id="安装依赖包"><a href="#安装依赖包" class="headerlink" title="安装依赖包"></a>安装依赖包</h4><p>本文安装的Storm版本是0.10.0，从0.9版本开始，Storm就支持用netty作为传输信息，默认是zeromq，需要在配置中说明。所以本文不用安装ZeroMQ、JZMQ依赖包。只需要安装java，并且要保证版本大于1.7。否则在启动Storm相关服务，会报错：<code>Unsupported major.minor version 51.0</code>，这表示你java的版本过低。<br>在linux中，可以用apt快捷安装。</p>
+<pre><code>sudo apt-get install openjdk-7-jre
+</code></pre><h4 id="下载并解压缩Storm包"><a href="#下载并解压缩Storm包" class="headerlink" title="下载并解压缩Storm包"></a>下载并解压缩Storm包</h4><p>从官网下载稳定发行版，本文为0.10.0.</p>
+<h4 id="修改storm-yaml配置"><a href="#修改storm-yaml配置" class="headerlink" title="修改storm.yaml配置"></a>修改storm.yaml配置</h4><p>本文修改的配置如下：</p>
+<pre><code>#配置zookeeper
+storm.zookeeper.servers:
+    - 127.0.0.1
+storm.zookeeper.port: 2181
+
+nimbus.host: &quot;127.0.0.1&quot;
+storm.local.dir: &quot;/tmp/storm&quot;
+supervisor.slots.ports:
+   - 6700
+   - 6701
+   - 6702
+   - 6703
+
+#配置ui访问端口
+ui.port: 8080
+
+#配置netty相关
+storm.messaging.transport: &quot;backtype.storm.messaging.netty.Context&quot;
+storm.messaging.netty.server_worker_threads: 1
+storm.messaging.netty.client_worker_threads: 1
+storm.messaging.netty.buffer_size: 5242880
+storm.messaging.netty.max_retries: 100
+storm.messaging.netty.max_wait_ms: 1000
+storm.messaging.netty.min_wait_ms: 100
+</code></pre><h4 id="启动storm"><a href="#启动storm" class="headerlink" title="启动storm"></a>启动storm</h4><p>进入storm的目录，启动下面的进程。</p>
+<pre><code>bin/storm nimbus
+bin/storm supervisor
+bin/storm ui
+</code></pre><p>通过ui查看storm运行状态，在浏览器中输入<a href="http://localhost:8080，可以在界面上观察。" target="_blank" rel="external">http://localhost:8080，可以在界面上观察。</a></p>
+<h3 id="WordCount实例"><a href="#WordCount实例" class="headerlink" title="WordCount实例"></a>WordCount实例</h3><p>现在跑一下官方的例子，学习怎么提交Topology。</p>
+<p>####安装maven<br>我们需要用maven进行编译打包，安装maven。</p>
+<pre><code>sudo apt-get install maven
+</code></pre><h4 id="打包Topology例子"><a href="#打包Topology例子" class="headerlink" title="打包Topology例子"></a>打包Topology例子</h4><pre><code>git clone git://github.com/apache/storm.git &amp;&amp; cd storm/examples/storm-starter
+mvn package
+</code></pre><p> 这里面我用的是master分支，里面的storm-core版本，在maven的仓库上还没有最新的库，有可能报错：</p>
+<pre><code> [ERROR] Failed to execute goal on project storm-starter: Could not resolve depen
+dencies for project org.apache.storm:storm-starter:jar:0.10.0-SNAPSHOT: Could no
+t find artifact org.apache.storm:storm-core:jar:0.10.0-SNAPSHOT in clojars (http
+s://clojars.org/repo/) -&gt; [Help 1]
+</code></pre><p>checkout 到0.9.3版本的标签即可解决问题。</p>
+<h4 id="提交Topology到Storm"><a href="#提交Topology到Storm" class="headerlink" title="提交Topology到Storm"></a>提交Topology到Storm</h4><p>在控制节点nimbus上执行</p>
+<p>bin/storm jartorm-starter-0.9.3-jar-with-dependencies.jar storm.starter.WordCountTopology test</p>
+<p>可以看到console的输出，也可以到ui上看，在Topology栏里面点击test进去查看提交的Topology信息。</p>
+<p><img src="http://iamsummer-wordpress.stor.sinaapp.com/uploads/2015/09/Snip20150913_14.png" alt=""></p>
+<p>这个例子是Spout不断的发射英文句子到Bolt，Bolt分解句子，将单词发射到下一个Bolt中处理，最后一个Bolt统计各单词的次数，保存在map里面。</p>
+<h3 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h3><p><a href="https://storm.apache.org/documentation/Tutorial.html" target="_blank" rel="external">https://storm.apache.org/documentation/Tutorial.html</a><br><a href="http://cloud.berkeley.edu/data/storm-berkeley.pdf" target="_blank" rel="external">http://cloud.berkeley.edu/data/storm-berkeley.pdf</a><br><a href="http://www.searchtb.com/2012/09/introduction-to-storm.html" target="_blank" rel="external">http://www.searchtb.com/2012/09/introduction-to-storm.html</a><br><a href="http://blog.jobbole.com/48595/" target="_blank" rel="external">http://blog.jobbole.com/48595/</a><br><a href="https://xumingming.sinaapp.com/category/storm/" target="_blank" rel="external">https://xumingming.sinaapp.com/category/storm/</a><br><a href="http://www.michael-noll.com/blog/2012/10/16/understanding-the-parallelism-of-a-storm-topology/" target="_blank" rel="external">http://www.michael-noll.com/blog/2012/10/16/understanding-the-parallelism-of-a-storm-topology/</a><br><a href="http://blog.csdn.net/tntzbzc/article/details/19974515" target="_blank" rel="external">http://blog.csdn.net/tntzbzc/article/details/19974515</a></p>
+
+    
+  </div>
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持flyman</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/02/07/kafka/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              rel="noopener noreferrer"
+              target="_blank"
+              >
+              RSS
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'flyman';
+    
+    var disqus_url = 'http://fengjianque.github.io/2017/02/07/storm-learn/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//flyman.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
