@@ -194,7 +194,7 @@ ImageMagick: 支持动态GIF的读和写">
       
   <span class="article-category">
     <i class="icon-list"></i>
-    <a class="article-category-link" href="/category/未分类/">未分类</a>
+    <a class="article-category-link" href="/categories/未分类/">未分类</a>
   </span>
 
 
@@ -232,12 +232,12 @@ ImageMagick: 支持动态GIF的读和写">
 <p>本文重点介绍wand如何处理GIF。</p>
 <h2 id="wand安装"><a href="#wand安装" class="headerlink" title="wand安装"></a>wand安装</h2><p>wand依赖ImageMagick。</p>
 <p>debian系统，直接安装</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">apt-get update</div><div class="line">apt-get install libmagickwand-dev</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><div class="line">apt-get update</div><div class="line">apt-get install libmagickwand-dev</div></pre></td></tr></table></figure>
 <p>然后使用pip安装wand。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pip install wand==0.4.4</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">pip install wand==0.4.4</div></pre></td></tr></table></figure>
 <h2 id="裁剪crop"><a href="#裁剪crop" class="headerlink" title="裁剪crop"></a>裁剪crop</h2><p>wand对动态GIF支持裁剪，对所有的帧都生效。</p>
 <p>函数原型：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">crop(*args, **kwargs)</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">crop(*args, **kwargs)</div></pre></td></tr></table></figure>
 <p>参数</p>
 <ul>
 <li>left (numbers.Integral) – x-offset of the cropped image. default is 0</li>
@@ -254,10 +254,10 @@ ImageMagick: 支持动态GIF的读和写">
 <li>把左上角坐标, 右下角坐标传人; 或者左上角坐标，宽、高传入。</li>
 <li>gravity，和相对于区域起点的偏移x偏移left，y偏移top，要裁剪的height、weight传入。</li>
 </ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">im.crop(left=crop_left, top=crop_top, width=crop_width, height=crop_height)</div><div class="line">im.crop(left=crop_left, top=crop_top, right=crop_right, bottom=crop_buttom)</div><div class="line">im.crop(left=offset_x, top=offest_y, width=crop_width, height=crop_height, gravity=&apos;center&apos;)</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">im.crop(left=crop_left, top=crop_top, width=crop_width, height=crop_height)</div><div class="line">im.crop(left=crop_left, top=crop_top, right=crop_right, bottom=crop_buttom)</div><div class="line">im.crop(left=offset_x, top=offest_y, width=crop_width, height=crop_height, gravity=&apos;center&apos;)</div></pre></td></tr></table></figure>
 <p>gravity指图片的9宫格的方位，分别有（’north_west’, ‘north’, ‘north_east’, ‘west’, ‘center’, ‘east’, ‘south_west’, ‘south’, ‘south_east’），如果设置这个值，那么起点坐标会重新设置。每个区域的的坐标起点会有所不同，可以看这里<a href="http://blog.csdn.net/pzw_0612/article/details/52296910" target="_blank" rel="external">gravity</a>。</p>
 <h2 id="sample-resize"><a href="#sample-resize" class="headerlink" title="sample/resize"></a>sample/resize</h2><p>wand对动态GIF支持缩放，对所有的帧都生效。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">resize(*args, **kwargs)</div><div class="line">sample(width, height)只支持两个参数，比resize快，损失一定的质量。</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">resize(*args, **kwargs)</div><div class="line">sample(width, height)只支持两个参数，比resize快，损失一定的质量。</div></pre></td></tr></table></figure>
 <p>参数:</p>
 <ul>
 <li>width (numbers.Integral) – the width in the scaled image. default is the original width</li>
@@ -267,8 +267,8 @@ ImageMagick: 支持动态GIF的读和写">
 </ul>
 <p>resize还可以带模糊功能，对整个GIF有效。</p>
 <h2 id="贴水印"><a href="#贴水印" class="headerlink" title="贴水印"></a>贴水印</h2><p>除了裁剪，缩放，其他对动态GIF的操作都必须一帧帧处理，然后再合成。<br>wand提供sequence，保存解析出来的图片帧。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">watermark(image, transparency, left, top)</div></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">from wand.image import Image</div><div class="line"></div><div class="line">position = (0, 0)</div><div class="line">opacity = 0.1</div><div class="line">with Image(filename=&apos;test.gif&apos;) as oriImg, \</div><div class="line">        Image(filename=&apos;mark.png&apos;) as mark:</div><div class="line">        for i in range(len(oriImg.sequence)):</div><div class="line">                with oriImg.sequence.index_context(i):</div><div class="line">                    oriImg.watermark(mark, transparency=opacity, left=position[0]-oriImg.page[2], top=position[1]-oriImg.page[3])</div><div class="line"></div><div class="line">        oriImg.save(filename=&apos;new.gif&apos;)</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">watermark(image, transparency, left, top)</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">from wand.image import Image</div><div class="line"></div><div class="line">position = (0, 0)</div><div class="line">opacity = 0.1</div><div class="line">with Image(filename=&apos;test.gif&apos;) as oriImg, \</div><div class="line">        Image(filename=&apos;mark.png&apos;) as mark:</div><div class="line">        for i in range(len(oriImg.sequence)):</div><div class="line">                with oriImg.sequence.index_context(i):</div><div class="line">                    oriImg.watermark(mark, transparency=opacity, left=position[0]-oriImg.page[2], top=position[1]-oriImg.page[3])</div><div class="line"></div><div class="line">        oriImg.save(filename=&apos;new.gif&apos;)</div></pre></td></tr></table></figure>
 <p>注意这里面需要注意的地方：</p>
 <ul>
 <li>需要使用index_context打开进行帧修改，然后close（这里用with）才生效； 如果用 <code>for frame in oriImg:</code> 需要append到一个新的Image容器修改才生效。</li>
@@ -277,7 +277,7 @@ ImageMagick: 支持动态GIF的读和写">
 </ul>
 <p>下面看效果，贴一个coco的图片：<br><img src="watermark.gif" alt=""></p>
 <h2 id="贴文字"><a href="#贴文字" class="headerlink" title="贴文字"></a>贴文字</h2><p>使用caption函数</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">caption(*args, **kwargs)</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">caption(*args, **kwargs)</div></pre></td></tr></table></figure>
 <p>参数:</p>
 <ul>
 <li>text (basestring) – text to write</li>
@@ -289,7 +289,7 @@ ImageMagick: 支持动态GIF的读和写">
 <li>gravity (basestring) – text placement gravity. uses the current gravity setting of the image by default</li>
 </ul>
 <p>看下面的代码：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">wand_font = wand.font.Font(font_path, size=font_size,</div><div class="line">        color=wand.color.Color(font_color), antialias=True,)</div><div class="line">w, h = im.sequence[0].size if im.animation else im.size</div><div class="line">textsize = (100, 100)</div><div class="line">with Image(filename=&apos;wizard:&apos;) as img:</div><div class="line">    from wand.drawing import Drawing</div><div class="line">    with Drawing() as context:</div><div class="line">        #context.font_family = &apos;monospace&apos;</div><div class="line">        context.font_size = font_size</div><div class="line">        context.font = font_path</div><div class="line">        metrics = context.get_font_metrics(img,</div><div class="line">                                           text.encode(&apos;utf8&apos;),</div><div class="line">                                           multiline=False)</div><div class="line">        textsize = (int(metrics.text_width), int(metrics.text_height))</div><div class="line"></div><div class="line">textpos = get_watermark_position(w, h, textsize[0], textsize[1],</div><div class="line">                                      gravity, dx, dy)</div><div class="line">for i in range(len(im.sequence)):</div><div class="line">    with im.sequence.index_context(i):</div><div class="line">        im.caption(text, int(textpos[0]-im.page[2]), int(textpos[1]-im.page[3]), textsize[0], textsize[1], wand_font)</div><div class="line">im.save(file=self.fopout.content)</div><div class="line">im.close()</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">wand_font = wand.font.Font(font_path, size=font_size,</div><div class="line">        color=wand.color.Color(font_color), antialias=True,)</div><div class="line">w, h = im.sequence[0].size if im.animation else im.size</div><div class="line">textsize = (100, 100)</div><div class="line">with Image(filename=&apos;wizard:&apos;) as img:</div><div class="line">    from wand.drawing import Drawing</div><div class="line">    with Drawing() as context:</div><div class="line">        #context.font_family = &apos;monospace&apos;</div><div class="line">        context.font_size = font_size</div><div class="line">        context.font = font_path</div><div class="line">        metrics = context.get_font_metrics(img,</div><div class="line">                                           text.encode(&apos;utf8&apos;),</div><div class="line">                                           multiline=False)</div><div class="line">        textsize = (int(metrics.text_width), int(metrics.text_height))</div><div class="line"></div><div class="line">textpos = get_watermark_position(w, h, textsize[0], textsize[1],</div><div class="line">                                      gravity, dx, dy)</div><div class="line">for i in range(len(im.sequence)):</div><div class="line">    with im.sequence.index_context(i):</div><div class="line">        im.caption(text, int(textpos[0]-im.page[2]), int(textpos[1]-im.page[3]), textsize[0], textsize[1], wand_font)</div><div class="line">im.save(file=self.fopout.content)</div><div class="line">im.close()</div></pre></td></tr></table></figure>
 <p>caption函数设计直接传人text，但是我们其实不知道text占用多大， 需要先算出大小，然后调整放置的位置。</p>
 <p>上面的流程：</p>
 <ol>
