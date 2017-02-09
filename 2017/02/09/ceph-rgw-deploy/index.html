@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>ceph rgw对象存储网关搭建 | Hexo</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="ceph," />
+  
+
+  <meta name="description" content="ceph rgw对象存储网关搭建ceph支持对象存储，依赖于一个网关rados gameway。此网关支持S3，Swift协议，比较常用。网关就是web服务器，ceph支持3种web服务部署。apache、nginx以及自带的civetweb。下面我给出自己的搭建方法。
+rados gateway 搭建前置工作
+安装radosgw进程
+
+sudo apt-get install radosgw">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ceph rgw对象存储网关搭建">
+<meta property="og:url" content="http://fengjianque.github.io/2017/02/09/ceph-rgw-deploy/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="ceph rgw对象存储网关搭建ceph支持对象存储，依赖于一个网关rados gameway。此网关支持S3，Swift协议，比较常用。网关就是web服务器，ceph支持3种web服务部署。apache、nginx以及自带的civetweb。下面我给出自己的搭建方法。
+rados gateway 搭建前置工作
+安装radosgw进程
+
+sudo apt-get install radosgw">
+<meta property="og:updated_time" content="2017-02-09T02:10:59.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ceph rgw对象存储网关搭建">
+<meta name="twitter:description" content="ceph rgw对象存储网关搭建ceph支持对象存储，依赖于一个网关rados gameway。此网关支持S3，Swift协议，比较常用。网关就是web服务器，ceph支持3种web服务部署。apache、nginx以及自带的civetweb。下面我给出自己的搭建方法。
+rados gateway 搭建前置工作
+安装radosgw进程
+
+sudo apt-get install radosgw">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=07a1c304" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            rel="noopener noreferrer"
+            target="_blank"
+            >
+            RSS
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#ceph-rgw对象存储网关搭建"><span class="toc-text">ceph rgw对象存储网关搭建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#rados-gateway-搭建"><span class="toc-text">rados gateway 搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#前置工作"><span class="toc-text">前置工作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用civetweb搭建"><span class="toc-text">使用civetweb搭建</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用apache"><span class="toc-text">使用apache</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用nginx"><span class="toc-text">使用nginx</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考文档："><span class="toc-text">参考文档：</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-ceph-rgw-deploy" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">ceph rgw对象存储网关搭建</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.02.09</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>Flyman</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/未分类/">未分类</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://fengjianque.github.io/2017/02/09/ceph-rgw-deploy/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h3 id="ceph-rgw对象存储网关搭建"><a href="#ceph-rgw对象存储网关搭建" class="headerlink" title="ceph rgw对象存储网关搭建"></a>ceph rgw对象存储网关搭建</h3><p>ceph支持对象存储，依赖于一个网关rados gameway。此网关支持S3，Swift协议，比较常用。网关就是web服务器，ceph支持3种web服务部署。<br>apache、nginx以及自带的civetweb。下面我给出自己的搭建方法。</p>
+<h3 id="rados-gateway-搭建"><a href="#rados-gateway-搭建" class="headerlink" title="rados gateway 搭建"></a>rados gateway 搭建</h3><h4 id="前置工作"><a href="#前置工作" class="headerlink" title="前置工作"></a>前置工作</h4><ol>
+<li>安装radosgw进程</li>
+</ol>
+<figure class="highlight actionscript"><table><tr><td class="code"><pre><div class="line">sudo apt-<span class="keyword">get</span> install radosgw</div></pre></td></tr></table></figure>
+<ol>
+<li>为网关配置一个密钥环：</li>
+</ol>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><div class="line">ceph-authtool --create-keyring /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.radosgw</span><span class="selector-class">.keyring</span></div><div class="line">chmod +r /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.radosgw</span><span class="selector-class">.keyring</span></div></pre></td></tr></table></figure>
+<ol>
+<li>为每个网关示例创建一个名字和key， 比如下面创建一个名字为gateway-node1的网关：</li>
+</ol>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><div class="line">ceph-authtool /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.radosgw</span><span class="selector-class">.keyring</span> -n client<span class="selector-class">.radosgw</span><span class="selector-class">.gateway-node1</span> --gen-key</div></pre></td></tr></table></figure>
+<ol>
+<li>为刚创建的key分配权限</li>
+</ol>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><div class="line">ceph-authtool -n client<span class="selector-class">.radosgw</span><span class="selector-class">.gateway-node1</span> --cap osd <span class="string">'allow rwx'</span> --cap mon <span class="string">'allow rwx'</span> /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.radosgw</span><span class="selector-class">.keyring</span></div></pre></td></tr></table></figure>
+<ol>
+<li>注册key到集群中</li>
+</ol>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><div class="line">ceph -k /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.admin</span><span class="selector-class">.keyring</span> auth add client<span class="selector-class">.radosgw</span><span class="selector-class">.gateway-node1</span> -<span class="selector-tag">i</span> /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.radosgw</span><span class="selector-class">.keyring</span></div></pre></td></tr></table></figure>
+<ol>
+<li><p>把/etc/ceph/ceph.client.radosgw.keyring拷贝到radosgw的机器上。</p>
+</li>
+<li><p>创建所需的pool，可以使用ceph的计算器<a href="http://ceph.com/pgcalc/，计算合理的值.如果不手动创建，radosgw启动进程时会自动根据配置默认的参数进行创建。" target="_blank" rel="external">http://ceph.com/pgcalc/，计算合理的值.如果不手动创建，radosgw启动进程时会自动根据配置默认的参数进行创建。</a></p>
+</li>
+</ol>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><div class="line">ceph osd pool create <span class="selector-class">.rgw</span><span class="selector-class">.root</span> <span class="number">32</span> <span class="number">32</span></div><div class="line">ceph osd pool create <span class="selector-class">.rgw</span><span class="selector-class">.control</span> <span class="number">32</span> <span class="number">32</span></div><div class="line">ceph osd pool create <span class="selector-class">.rgw</span><span class="selector-class">.gc</span> <span class="number">32</span> <span class="number">32</span></div><div class="line">ceph osd pool create <span class="selector-class">.rgw</span><span class="selector-class">.buckets</span><span class="selector-class">.data</span> <span class="number">256</span> <span class="number">256</span></div><div class="line">ceph osd pool create <span class="selector-class">.rgw</span><span class="selector-class">.buckets</span><span class="selector-class">.index</span> <span class="number">128</span> <span class="number">128</span></div><div class="line">ceph osd pool create <span class="selector-class">.log</span> <span class="number">64</span> <span class="number">64</span></div><div class="line">ceph osd pool create <span class="selector-class">.users</span> <span class="number">64</span> <span class="number">64</span></div><div class="line">ceph osd pool create <span class="selector-class">.users</span><span class="selector-class">.email</span> <span class="number">64</span> <span class="number">64</span></div><div class="line">ceph osd pool create <span class="selector-class">.users</span><span class="selector-class">.keys</span> <span class="number">64</span> <span class="number">64</span></div><div class="line">ceph osd pool create <span class="selector-class">.users</span><span class="selector-class">.uid</span> <span class="number">64</span> <span class="number">64</span></div></pre></td></tr></table></figure>
+<pre><code>Ceph 对象网关有多个存储池，考虑到所有存储池会共用相同的 CRUSH 分级结构，所以 PG 数不要设置得过大，否则会影响性能。
+</code></pre><ol>
+<li>创建rgw数据目录</li>
+</ol>
+<figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">mkdir -p /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">radosgw</span>/<span class="title">client</span>.<span class="title">radosgw</span>.<span class="title">gateway</span>-<span class="title">node1</span></span></div><div class="line">chown <span class="symbol">ceph:</span>ceph /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span> -<span class="title">R</span></span></div></pre></td></tr></table></figure>
+<h4 id="使用civetweb搭建"><a href="#使用civetweb搭建" class="headerlink" title="使用civetweb搭建"></a>使用civetweb搭建</h4><ol>
+<li>配置网关</li>
+</ol>
+<figure class="highlight nix"><table><tr><td class="code"><pre><div class="line">[client.radosgw.gateway-node1]</div><div class="line"><span class="attr">host</span> = node1</div><div class="line">rgw <span class="attr">data</span> = /var/lib/ceph/radosgw/client.radosgw.gateway-node1</div><div class="line"><span class="attr">keyring</span> = /etc/ceph/ceph.client.radosgw.keyring</div><div class="line">rgw <span class="attr">frontends</span> = <span class="string">"civetweb port=8090 enable_keep_alive=yes"</span></div><div class="line">log <span class="attr">file</span> = /var/log/radosgw/client.radosgw.gateway-node1.log</div><div class="line">rgw num rados <span class="attr">handles</span> = <span class="number">10</span>  <span class="comment">###每个线程处理几个请求</span></div><div class="line">rgw thread pool <span class="attr">size</span> = <span class="number">500</span></div><div class="line">rgw print <span class="attr">continue</span> = <span class="literal">false</span></div><div class="line">rgw cache <span class="attr">enabled</span> = <span class="literal">true</span></div><div class="line">rgw content length <span class="attr">compat</span> = <span class="literal">true</span>  <span class="comment">##表示兼容没有content-length字段的情况</span></div></pre></td></tr></table></figure>
+<ol>
+<li>启动rgw进程</li>
+</ol>
+<figure class="highlight awk"><table><tr><td class="code"><pre><div class="line"><span class="regexp">/etc/i</span>nit.d<span class="regexp">/radosgw start</span></div></pre></td></tr></table></figure>
+<h3 id="使用apache"><a href="#使用apache" class="headerlink" title="使用apache"></a>使用apache</h3><ol>
+<li>安装apache2</li>
+</ol>
+<figure class="highlight actionscript"><table><tr><td class="code"><pre><div class="line">apt-<span class="keyword">get</span> install apache2</div></pre></td></tr></table></figure>
+<ol>
+<li>在/etc/apache/sites-avalible下创建一个rgw.conf(文件名可改):</li>
+</ol>
+<figure class="highlight apache"><table><tr><td class="code"><pre><div class="line"><span class="section">&lt;VirtualHost *:80&gt;</span></div><div class="line">    <span class="attribute"><span class="nomarkup">ServerName</span></span> s3.ceph.com</div><div class="line">    <span class="attribute"><span class="nomarkup">DocumentRoot</span></span> /var/www/html</div><div class="line"></div><div class="line">    <span class="attribute">ErrorLog</span> /var/log/radosgw/rgw_error.log</div><div class="line">    <span class="attribute">CustomLog</span> /var/log/radosgw/rgw_access.log combined</div><div class="line"></div><div class="line">    <span class="comment"># LogLevel debug</span></div><div class="line"></div><div class="line">    <span class="attribute"><span class="nomarkup">RewriteEngine</span></span> <span class="literal">On</span></div><div class="line"></div><div class="line">    <span class="attribute"><span class="nomarkup">RewriteRule</span></span> .* -<span class="meta"> [E=HTTP_AUTHORIZATION:%&#123;HTTP:Authorization&#125;,L]</span></div><div class="line"></div><div class="line">    <span class="attribute"><span class="nomarkup">SetEnv</span></span> proxy-nokeepalive 1</div><div class="line"></div><div class="line">    <span class="attribute">ProxyPass</span> / unix:///var/run/ceph/ceph.radosgw.gateway.fastcgi.sock|fcgi://localhost:9000/</div><div class="line"></div><div class="line"><span class="section">&lt;/VirtualHost&gt;</span></div></pre></td></tr></table></figure>
+<ol>
+<li>启用rgw.conf</li>
+</ol>
+<figure class="highlight vim"><table><tr><td class="code"><pre><div class="line"><span class="keyword">cd</span> /etc/apache2/sites-enable</div><div class="line"><span class="keyword">ln</span> -s ../sites-avalible/rgw.<span class="keyword">conf</span></div></pre></td></tr></table></figure>
+<p><strong>注意：在apache2的2.4.9版本以上才支持unix socket</strong></p>
+<ol>
+<li>ceph.conf配置：</li>
+</ol>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><div class="line">[client<span class="selector-class">.radosgw</span><span class="selector-class">.gateway-node1</span>]</div><div class="line">host = node1</div><div class="line">rgw frontends = fastcgi</div><div class="line">rgw data = /var/lib/ceph/radosgw/client<span class="selector-class">.radosgw</span><span class="selector-class">.gateway-node1</span></div><div class="line">keyring = /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.radosgw</span><span class="selector-class">.keyring</span></div><div class="line">rgw <span class="attribute">content</span> length compat = true</div><div class="line">rgw socket path = /var/run/client<span class="selector-class">.radosgw</span><span class="selector-class">.gameway-node1</span><span class="selector-class">.fastcgi</span><span class="selector-class">.sock</span></div><div class="line">rgw frontends = fastcgi socket_port=<span class="number">9000</span> socket_host=<span class="number">0.0</span>.<span class="number">0.0</span></div><div class="line">log file = /var/log/radosgw/client<span class="selector-class">.radosgw</span><span class="selector-class">.gateway-node1</span><span class="selector-class">.log</span></div><div class="line">rgw print continue = false</div><div class="line">rgw num rados handles = <span class="number">1000</span></div><div class="line">rgw thread pool size = <span class="number">500</span></div></pre></td></tr></table></figure>
+<ol>
+<li>启动apache进程和rgw进程</li>
+</ol>
+<figure class="highlight crmsh"><table><tr><td class="code"><pre><div class="line">/etc/init.d/apache <span class="literal">start</span></div><div class="line">/etc/init.d/radosgw <span class="literal">start</span></div></pre></td></tr></table></figure>
+<h3 id="使用nginx"><a href="#使用nginx" class="headerlink" title="使用nginx"></a>使用nginx</h3><ol>
+<li>安装nginx</li>
+</ol>
+<figure class="highlight actionscript"><table><tr><td class="code"><pre><div class="line">apt-<span class="keyword">get</span> install nginx</div></pre></td></tr></table></figure>
+<ol>
+<li>同样在/etc/nginx/site-avalible下新建站点rgw.conf</li>
+</ol>
+<figure class="highlight nginx"><table><tr><td class="code"><pre><div class="line"><span class="attribute">upstream</span> rgw &#123;</div><div class="line">    <span class="comment">#server unix:/var/run/client.radosgw.gateway-node1.fastcgi.sock;</span></div><div class="line">    <span class="attribute">server</span> localhost:<span class="number">9000</span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="section">server</span> &#123;</div><div class="line">    <span class="attribute">listen</span> <span class="number">80</span> default backlog=<span class="number">20000</span>;</div><div class="line"></div><div class="line">    <span class="attribute">server_name</span> s3.ceph.com;</div><div class="line"></div><div class="line">    <span class="attribute">client_max_body_size</span> <span class="number">0</span>;</div><div class="line"></div><div class="line">    <span class="attribute">proxy_buffering</span> <span class="literal">off</span>;</div><div class="line">    <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</div><div class="line">    <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$remote_addr</span>;</div><div class="line"></div><div class="line">    <span class="attribute">access_log</span> /var/log/radosgw/access.log main;</div><div class="line">    <span class="attribute">error_log</span> /var/log/radosgw/error.log;</div><div class="line"></div><div class="line">    <span class="attribute">location</span> / &#123;</div><div class="line">        <span class="attribute">fastcgi_pass_header</span> Authorization;</div><div class="line">        <span class="attribute">fastcgi_pass_request_headers</span> <span class="literal">on</span>;</div><div class="line"></div><div class="line">        <span class="attribute">include</span> fastcgi_params;</div><div class="line">        <span class="attribute">fastcgi_pass</span> rgw;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ol>
+<li>启动rgw.conf站点</li>
+</ol>
+<figure class="highlight vim"><table><tr><td class="code"><pre><div class="line"><span class="keyword">cd</span> /etc/nginx/site-enabled</div><div class="line"><span class="keyword">ln</span> -s ../site-available/rgw.<span class="keyword">conf</span></div></pre></td></tr></table></figure>
+<ol>
+<li>ceph中rgw的配置与apache的一致。</li>
+<li>启动nginx和radosgw进程</li>
+</ol>
+<figure class="highlight crmsh"><table><tr><td class="code"><pre><div class="line">/etc/init.d/nginx <span class="literal">start</span></div><div class="line">/etc/init.d/radosgw <span class="literal">start</span></div></pre></td></tr></table></figure>
+<h3 id="参考文档："><a href="#参考文档：" class="headerlink" title="参考文档："></a>参考文档：</h3><p><a href="http://dachary.org/loic/ceph-doc/start/quick-rgw/" target="_blank" rel="external">http://dachary.org/loic/ceph-doc/start/quick-rgw/</a></p>
+
+    
+  </div>
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持flyman</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/02/09/ceph-deploy/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              rel="noopener noreferrer"
+              target="_blank"
+              >
+              RSS
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'flyman';
+    
+    var disqus_url = 'http://fengjianque.github.io/2017/02/09/ceph-rgw-deploy/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//flyman.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

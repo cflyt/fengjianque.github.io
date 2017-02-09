@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Ceph手动部署 | Hexo</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="ceph," />
+  
+
+  <meta name="description" content="Ceph手动部署Ceph是一套高性能，易扩展的，无单点的、自恢复管理分布式存储系统，提供了块存储、对象存储、文件系统存储功能。Ceph强大的功能吸引越来越多的开发者使用，已有不少的公司生产环境使用它，红帽更是把Ceph的公司收购作为红帽系统的存储方案。
+下面是我手动部署ceph的过程，希望对大家有所借鉴。
+编译ceph，构建本地的apt源
+下载源码，构建deb包
+
+git clone https:">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ceph手动部署">
+<meta property="og:url" content="http://fengjianque.github.io/2017/02/09/ceph-deploy/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Ceph手动部署Ceph是一套高性能，易扩展的，无单点的、自恢复管理分布式存储系统，提供了块存储、对象存储、文件系统存储功能。Ceph强大的功能吸引越来越多的开发者使用，已有不少的公司生产环境使用它，红帽更是把Ceph的公司收购作为红帽系统的存储方案。
+下面是我手动部署ceph的过程，希望对大家有所借鉴。
+编译ceph，构建本地的apt源
+下载源码，构建deb包
+
+git clone https:">
+<meta property="og:updated_time" content="2017-02-09T02:00:01.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Ceph手动部署">
+<meta name="twitter:description" content="Ceph手动部署Ceph是一套高性能，易扩展的，无单点的、自恢复管理分布式存储系统，提供了块存储、对象存储、文件系统存储功能。Ceph强大的功能吸引越来越多的开发者使用，已有不少的公司生产环境使用它，红帽更是把Ceph的公司收购作为红帽系统的存储方案。
+下面是我手动部署ceph的过程，希望对大家有所借鉴。
+编译ceph，构建本地的apt源
+下载源码，构建deb包
+
+git clone https:">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=07a1c304" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            rel="noopener noreferrer"
+            target="_blank"
+            >
+            RSS
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Ceph手动部署"><span class="toc-text">Ceph手动部署</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#编译ceph，构建本地的apt源"><span class="toc-text">编译ceph，构建本地的apt源</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#或者使用debian-8-已编译好的源"><span class="toc-text">或者使用debian 8 已编译好的源</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#开通防火墙"><span class="toc-text">开通防火墙</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#设置hosts"><span class="toc-text">设置hosts</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建ceph用户"><span class="toc-text">创建ceph用户</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#部署monitor"><span class="toc-text">部署monitor</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-生成uuid，作为集群的唯一标识"><span class="toc-text">1. 生成uuid，作为集群的唯一标识</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-初步配置集群"><span class="toc-text">2. 初步配置集群</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-创建密钥环"><span class="toc-text">3.创建密钥环</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-建立monitor-map"><span class="toc-text">4. 建立monitor map</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-建立monitor数据存放目录"><span class="toc-text">5. 建立monitor数据存放目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-初始化mon节点"><span class="toc-text">6. 初始化mon节点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-完成monior节点初始化"><span class="toc-text">7. 完成monior节点初始化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#8-启动monitor节点"><span class="toc-text">8. 启动monitor节点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#9-检查monitor状态和集群状态"><span class="toc-text">9. 检查monitor状态和集群状态</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#增加OSD"><span class="toc-text">增加OSD</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#生成osd的序号"><span class="toc-text">生成osd的序号</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#磁盘分区"><span class="toc-text">磁盘分区</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#创建默认目录"><span class="toc-text">创建默认目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#格式化磁盘，挂载目录"><span class="toc-text">格式化磁盘，挂载目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#初始化OSD的数据目录"><span class="toc-text">初始化OSD的数据目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#注册OSD的认证密钥"><span class="toc-text">注册OSD的认证密钥</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#添加Ceph节点到CRUSH映射中"><span class="toc-text">添加Ceph节点到CRUSH映射中</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#移动节点到root节点下面"><span class="toc-text">移动节点到root节点下面</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#添加OSD节点到CRUSH映射中"><span class="toc-text">添加OSD节点到CRUSH映射中</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#添加OSD配置到ceph-conf中"><span class="toc-text">添加OSD配置到ceph.conf中</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动osd进程"><span class="toc-text">启动osd进程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考文档："><span class="toc-text">参考文档：</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-ceph-deploy" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Ceph手动部署</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.02.09</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>Flyman</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/未分类/">未分类</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://fengjianque.github.io/2017/02/09/ceph-deploy/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h2 id="Ceph手动部署"><a href="#Ceph手动部署" class="headerlink" title="Ceph手动部署"></a>Ceph手动部署</h2><p>Ceph是一套高性能，易扩展的，无单点的、自恢复管理分布式存储系统，提供了块存储、对象存储、文件系统存储功能。Ceph强大的功能吸引越来越多的开发者使用，已有不少的公司生产环境使用它，红帽更是把Ceph的公司收购作为红帽系统的存储方案。</p>
+<p>下面是我手动部署ceph的过程，希望对大家有所借鉴。</p>
+<h4 id="编译ceph，构建本地的apt源"><a href="#编译ceph，构建本地的apt源" class="headerlink" title="编译ceph，构建本地的apt源"></a>编译ceph，构建本地的apt源</h4><ol>
+<li>下载源码，构建deb包</li>
+</ol>
+<figure class="highlight vim"><table><tr><td class="code"><pre><div class="line">git clone http<span class="variable">s:</span>//github.<span class="keyword">com</span>/ceph/ceph.git</div><div class="line"><span class="keyword">cd</span> ceph</div><div class="line">./install-deps.<span class="keyword">sh</span></div><div class="line">apt-<span class="built_in">get</span> install dpkg-dev</div><div class="line">dpkg-checkbuilddeps        # <span class="keyword">make</span> sure we have <span class="keyword">all</span> dependencies</div><div class="line">dpkg-buildpackage -j32 -uc -us</div></pre></td></tr></table></figure>
+<p><strong>-j32表示并发编译数，一般为核数的两倍即可，加快编译速度。</strong><br><strong>-us -uc表示不需要进行签名</strong><br><strong>注意编译的机器的内存最好有4G上，不然编译过程中会报错</strong></p>
+<ol>
+<li>编译成功后，在构建成功的deb包存放在ceph的上一层目录。</li>
+</ol>
+<figure class="highlight css"><table><tr><td class="code"><pre><div class="line"><span class="selector-tag">ceph_10</span><span class="selector-class">.2</span><span class="selector-class">.0-1</span><span class="selector-class">.dsc</span></div><div class="line"><span class="selector-tag">ceph_10</span><span class="selector-class">.2</span><span class="selector-class">.0-1</span><span class="selector-class">.tar</span><span class="selector-class">.gz</span></div><div class="line"><span class="selector-tag">ceph-base_10</span><span class="selector-class">.2</span><span class="selector-class">.0-1_amd64</span><span class="selector-class">.deb</span></div><div class="line">......</div></pre></td></tr></table></figure>
+<ol>
+<li>为apt构建本地源。</li>
+</ol>
+<p>（1）创建一个目录，保存ceph的deb包</p>
+<figure class="highlight arduino"><table><tr><td class="code"><pre><div class="line"><span class="built_in">mkdir</span> /<span class="built_in">home</span>/ceph/debs</div></pre></td></tr></table></figure>
+<p>（2） 拷贝deb包到debs目录<br>（3）使用dpkg-scanpackages 命令生成APT可以使用的软件包索引文件</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><div class="line">dpkg-scanpackages debs <span class="regexp">/dev/</span><span class="keyword">null</span> | gzip &gt; packages<span class="regexp">/Packages.gz</span></div></pre></td></tr></table></figure>
+<p>注意一下路径问题。等待系统扫描完所有的软件包后，会返回命令行，并且在packages文件夹中生成一个名为Packages.gz的压缩文件，存有这个文件夹中的软件包信息及其依赖关系。<br>(4) 修改/etc/apt/sources.list来使用本地源，添加</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><div class="line">deb file:<span class="regexp">//</span><span class="regexp">/home/</span>ceph debs<span class="regexp">/</span></div></pre></td></tr></table></figure>
+<p><strong>ps: 注意斜杠和空格</strong></p>
+<p>(5)运行更新：</p>
+<figure class="highlight q"><table><tr><td class="code"><pre><div class="line">apt-<span class="built_in">get</span> <span class="keyword">update</span></div></pre></td></tr></table></figure>
+<p>之后，安装ceph就会选择本地源了。</p>
+<h4 id="或者使用debian-8-已编译好的源"><a href="#或者使用debian-8-已编译好的源" class="headerlink" title="或者使用debian 8 已编译好的源"></a>或者使用debian 8 已编译好的源</h4><figure class="highlight awk"><table><tr><td class="code"><pre><div class="line">deb http:<span class="regexp">//</span>download.ceph.com<span class="regexp">/debian-jewel/</span>  jessie main</div></pre></td></tr></table></figure>
+<p>上面添加的是ceph的jewel版本官方源，可以使用国内的源</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><div class="line">deb http:<span class="regexp">//mi</span>rrors.<span class="number">163</span>.com<span class="regexp">/ceph/</span>debian-jewel<span class="regexp">/  jessie main</span></div></pre></td></tr></table></figure>
+<p>需要添加更新public key：</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><div class="line">curl http<span class="variable">s:</span>//git.ceph.<span class="keyword">com</span>/release.asc | sudo apt-key <span class="built_in">add</span> -</div><div class="line">apt-<span class="built_in">get</span> <span class="keyword">update</span></div></pre></td></tr></table></figure>
+<h3 id="开通防火墙"><a href="#开通防火墙" class="headerlink" title="开通防火墙"></a>开通防火墙</h3><p>打开6789和6800-7300的端口</p>
+<h3 id="设置hosts"><a href="#设置hosts" class="headerlink" title="设置hosts"></a>设置hosts</h3><figure class="highlight css"><table><tr><td class="code"><pre><div class="line">10<span class="selector-class">.160</span><span class="selector-class">.88</span><span class="selector-class">.220</span> <span class="selector-tag">ceph-node1</span></div><div class="line">10<span class="selector-class">.160</span><span class="selector-class">.88</span><span class="selector-class">.221</span> <span class="selector-tag">ceph-node2</span></div><div class="line">10<span class="selector-class">.160</span><span class="selector-class">.88</span><span class="selector-class">.222</span> <span class="selector-tag">ceph-node3</span></div></pre></td></tr></table></figure>
+<p>同时修改每个主机hostname， 使用<code>hostname -s</code>命令查看修改是否生效。</p>
+<h3 id="创建ceph用户"><a href="#创建ceph用户" class="headerlink" title="创建ceph用户"></a>创建ceph用户</h3><figure class="highlight dts"><table><tr><td class="code"><pre><div class="line">echo <span class="string">"ceph ALL = (root) NOPASSWD:ALL"</span> | tee <span class="meta-keyword">/etc/</span>sudoers.d/ceph</div><div class="line">chmod <span class="number">0440</span> <span class="meta-keyword">/etc/</span>sudoers.d/ceph</div></pre></td></tr></table></figure>
+<h3 id="部署monitor"><a href="#部署monitor" class="headerlink" title="部署monitor"></a>部署monitor</h3><h4 id="1-生成uuid，作为集群的唯一标识"><a href="#1-生成uuid，作为集群的唯一标识" class="headerlink" title="1. 生成uuid，作为集群的唯一标识"></a>1. 生成uuid，作为集群的唯一标识</h4><p>使用uuidgen生成唯一的id</p>
+<figure class="highlight livecodeserver"><table><tr><td class="code"><pre><div class="line">apt-<span class="built_in">get</span> install <span class="built_in">uuid</span>-runtime</div><div class="line">uuidgen</div></pre></td></tr></table></figure>
+<h4 id="2-初步配置集群"><a href="#2-初步配置集群" class="headerlink" title="2. 初步配置集群"></a>2. 初步配置集群</h4><figure class="highlight lsl"><table><tr><td class="code"><pre><div class="line">[global]</div><div class="line">fsid = cff8e3d5-abcc<span class="number">-4</span>d6a-aca8-f29d68cdac56</div><div class="line">cluster = ceph</div><div class="line">auth cluster required = cephx</div><div class="line">auth service required = cephx</div><div class="line">auth client required = cephx</div><div class="line"></div><div class="line">public network = <span class="number">106.2</span><span class="number">.71</span><span class="number">.0</span>/<span class="number">24</span></div><div class="line">cluster network = <span class="number">10.160</span><span class="number">.88</span><span class="number">.0</span>/<span class="number">24</span></div><div class="line"></div><div class="line">mon initial members = ceph-node1</div><div class="line">mon host = <span class="number">10.160</span><span class="number">.88</span><span class="number">.220</span></div></pre></td></tr></table></figure>
+<h4 id="3-创建密钥环"><a href="#3-创建密钥环" class="headerlink" title="3.创建密钥环"></a>3.创建密钥环</h4><figure class="highlight stylus"><table><tr><td class="code"><pre><div class="line">#为monitor生成密钥</div><div class="line">ceph-authtool --create-keyring /tmp/ceph<span class="selector-class">.mon</span><span class="selector-class">.keyring</span> --gen-key -n mon. --cap mon <span class="string">'allow *'</span></div><div class="line">#生成 `client.admin` 用户并添加该用户到密钥环</div><div class="line">ceph-authtool --create-keyring /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.admin</span><span class="selector-class">.keyring</span> --gen-key -n client<span class="selector-class">.admin</span> --set-uid=<span class="number">0</span> --cap mon <span class="string">'allow *'</span> --cap osd <span class="string">'allow *'</span> --cap mds <span class="string">'allow'</span></div><div class="line">#添加 `client.admin` 密钥到 `ceph<span class="selector-class">.mon</span><span class="selector-class">.keyring</span>`</div><div class="line">ceph-authtool /tmp/ceph<span class="selector-class">.mon</span><span class="selector-class">.keyring</span> --import-keyring /etc/ceph/ceph<span class="selector-class">.client</span><span class="selector-class">.admin</span><span class="selector-class">.keyring</span></div></pre></td></tr></table></figure>
+<h4 id="4-建立monitor-map"><a href="#4-建立monitor-map" class="headerlink" title="4. 建立monitor map"></a>4. 建立monitor map</h4><p>使用主机短名、IP地址和fsid建立mornitor map</p>
+<figure class="highlight brainfuck"><table><tr><td class="code"><pre><div class="line"><span class="comment">monmaptool</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">create</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">&#123;hostname&#125;</span> <span class="comment">&#123;ip</span><span class="literal">-</span><span class="comment">address&#125;</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">fsid</span> <span class="comment">&#123;uuid&#125;</span> <span class="comment">/tmp/monmap</span></div><div class="line"><span class="comment">monmaptool</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">create</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">node1</span> <span class="comment">10</span><span class="string">.</span><span class="comment">160</span><span class="string">.</span><span class="comment">88</span><span class="string">.</span><span class="comment">220</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">fsid</span> <span class="comment">cff8e3d5</span><span class="literal">-</span><span class="comment">abcc</span><span class="literal">-</span><span class="comment">4d6a</span><span class="literal">-</span><span class="comment">aca8</span><span class="literal">-</span><span class="comment">f29d68cdac56</span> <span class="comment">/tmp/monmap</span></div></pre></td></tr></table></figure>
+<h4 id="5-建立monitor数据存放目录"><a href="#5-建立monitor数据存放目录" class="headerlink" title="5. 建立monitor数据存放目录"></a>5. 建立monitor数据存放目录</h4><figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">mkdir -p /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">mon</span>/&#123;<span class="title">cluster</span>-<span class="title">name</span>&#125;-&#123;<span class="title">hostname</span>&#125;</span></div><div class="line">mkdir -p /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">mon</span>/<span class="title">ceph</span>-<span class="title">node1</span></span></div></pre></td></tr></table></figure>
+<h4 id="6-初始化mon节点"><a href="#6-初始化mon节点" class="headerlink" title="6. 初始化mon节点"></a>6. 初始化mon节点</h4><figure class="highlight stylus"><table><tr><td class="code"><pre><div class="line">ceph-mon --mkfs -<span class="selector-tag">i</span> &#123;hostname&#125; --monmap /tmp/monmap --keyring /tmp/ceph<span class="selector-class">.mon</span><span class="selector-class">.keyring</span></div><div class="line">ceph-mon --mkfs -<span class="selector-tag">i</span> node1 --monmap /tmp/monmap --keyring /tmp/ceph<span class="selector-class">.mon</span><span class="selector-class">.keyring</span></div></pre></td></tr></table></figure>
+<h4 id="7-完成monior节点初始化"><a href="#7-完成monior节点初始化" class="headerlink" title="7. 完成monior节点初始化"></a>7. 完成monior节点初始化</h4><figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">touch /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">mon</span>/<span class="title">ceph</span>-<span class="title">node1</span>/<span class="title">done</span></span></div></pre></td></tr></table></figure>
+<h4 id="8-启动monitor节点"><a href="#8-启动monitor节点" class="headerlink" title="8. 启动monitor节点"></a>8. 启动monitor节点</h4><p>对于有些系统，如debian 8 jessie用sysvinit，需要<code>touch /var/lib/ceph/mon/ceph-node1/sysvinit</code> 否则在    /etc/init.d/ceph脚本的check_host处由于找不到hostname直接退出。</p>
+<p><strong>注意还需要将相关的目录所有者更改为ceph</strong></p>
+<figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">chown <span class="symbol">ceph:</span>ceph /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span> -<span class="title">R</span></span></div><div class="line"></div><div class="line">/etc/init.d/ceph start mon.&#123;hostname&#125;</div><div class="line">/etc/init.d/ceph start mon.node1</div></pre></td></tr></table></figure>
+<h4 id="9-检查monitor状态和集群状态"><a href="#9-检查monitor状态和集群状态" class="headerlink" title="9. 检查monitor状态和集群状态"></a>9. 检查monitor状态和集群状态</h4><figure class="highlight elixir"><table><tr><td class="code"><pre><div class="line"><span class="comment"># ceph mon_status</span></div><div class="line">&#123;<span class="string">"name"</span><span class="symbol">:<span class="string">"node1"</span></span>,<span class="string">"rank"</span><span class="symbol">:</span><span class="number">0</span>,<span class="string">"state"</span><span class="symbol">:<span class="string">"leader"</span></span>,<span class="string">"election_epoch"</span><span class="symbol">:</span><span class="number">3</span>,<span class="string">"quorum"</span><span class="symbol">:</span>[<span class="number">0</span>],<span class="string">"outside_quorum"</span><span class="symbol">:[]</span>,<span class="string">"extra_probe_peers"</span><span class="symbol">:[]</span>,<span class="string">"sync_provider"</span><span class="symbol">:[]</span>,<span class="string">"monmap"</span><span class="symbol">:</span>&#123;<span class="string">"epoch"</span><span class="symbol">:</span><span class="number">1</span>,<span class="string">"fsid"</span><span class="symbol">:<span class="string">"cff8e3d5-abcc-4d6a-aca8-f29d68cdac56"</span></span>,<span class="string">"modified"</span><span class="symbol">:<span class="string">"2016-05-06 17:47:01.476949"</span></span>,<span class="string">"created"</span><span class="symbol">:<span class="string">"2016-05-06 17:47:01.476949"</span></span>,<span class="string">"mons"</span><span class="symbol">:</span>[&#123;<span class="string">"rank"</span><span class="symbol">:</span><span class="number">0</span>,<span class="string">"name"</span><span class="symbol">:<span class="string">"node1"</span></span>,<span class="string">"addr"</span><span class="symbol">:<span class="string">"10.160.88.220:6789\/0"</span></span>&#125;]&#125;&#125;</div><div class="line"></div><div class="line"><span class="comment"># ceph -s</span></div><div class="line">cluster cff8e3d5-abcc-<span class="number">4</span>d6a-aca8-f29d68cdac56</div><div class="line"> health HEALTH_ERR</div><div class="line">        <span class="number">64</span> pgs are stuck inactive <span class="keyword">for</span> more than <span class="number">300</span> seconds</div><div class="line">        <span class="number">64</span> pgs stuck inactive</div><div class="line">        no osds</div><div class="line"> monmap <span class="symbol">e1:</span> <span class="number">1</span> mons at &#123;node1=<span class="number">10.160</span>.<span class="number">88.220</span><span class="symbol">:</span><span class="number">6789</span>/<span class="number">0</span>&#125;</div><div class="line">        election epoch <span class="number">3</span>, quorum <span class="number">0</span> node1</div><div class="line"> osdmap <span class="symbol">e1:</span> <span class="number">0</span> <span class="symbol">osds:</span> <span class="number">0</span> up, <span class="number">0</span> <span class="keyword">in</span></div><div class="line">        flags sortbitwise</div><div class="line">  pgmap <span class="symbol">v2:</span> <span class="number">64</span> pgs, <span class="number">1</span> pools, <span class="number">0</span> bytes data, <span class="number">0</span> objects</div><div class="line">        <span class="number">0</span> kB used, <span class="number">0</span> kB / <span class="number">0</span> kB avail</div><div class="line">              <span class="number">64</span> creating</div></pre></td></tr></table></figure>
+<h3 id="增加OSD"><a href="#增加OSD" class="headerlink" title="增加OSD"></a>增加OSD</h3><h4 id="生成osd的序号"><a href="#生成osd的序号" class="headerlink" title="生成osd的序号"></a>生成osd的序号</h4><figure class="highlight sql"><table><tr><td class="code"><pre><div class="line">ceph osd <span class="keyword">create</span> [&#123;<span class="keyword">uuid</span>&#125;]</div></pre></td></tr></table></figure>
+<p>uuid可以不要，ceph自动生成一个</p>
+<h4 id="磁盘分区"><a href="#磁盘分区" class="headerlink" title="磁盘分区"></a>磁盘分区</h4><figure class="highlight lsl"><table><tr><td class="code"><pre><div class="line">fdisk /dev/sdb</div><div class="line">输入n，增加一个分区</div><div class="line">Partition type选择P，表示主分区</div><div class="line">Partition number选择默认的</div><div class="line">First sector：选择默认</div><div class="line">Last sector：根据需要输入大小（如<span class="number">100</span>G, 则<span class="number">100</span>*<span class="number">1024</span>*<span class="number">1024</span>*<span class="number">1024</span>/sector_size - First_secor）</div><div class="line">输入：w   进行写入</div></pre></td></tr></table></figure>
+<h4 id="创建默认目录"><a href="#创建默认目录" class="headerlink" title="创建默认目录"></a>创建默认目录</h4><figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">mkdir -p /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/<span class="title">ceph</span>-&#123;<span class="title">osd</span>-<span class="title">number</span>&#125;</span></div><div class="line">mkdir -p /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/<span class="title">ceph</span>-2</span></div></pre></td></tr></table></figure>
+<h4 id="格式化磁盘，挂载目录"><a href="#格式化磁盘，挂载目录" class="headerlink" title="格式化磁盘，挂载目录"></a>格式化磁盘，挂载目录</h4><figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">mkfs -t &#123;fstype&#125; /dev/&#123;hdd&#125;</div><div class="line">mount -o user_xattr /dev/&#123;hdd&#125; /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/<span class="title">ceph</span>-&#123;<span class="title">osd</span>-<span class="title">number</span>&#125;</span></div><div class="line">如：</div><div class="line">mkfs -t ext4 /dev/sdb1</div><div class="line">mount -o user_xattr /dev/sdb1 /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/<span class="title">ceph</span>-2</span></div></pre></td></tr></table></figure>
+<h4 id="初始化OSD的数据目录"><a href="#初始化OSD的数据目录" class="headerlink" title="初始化OSD的数据目录"></a>初始化OSD的数据目录</h4><figure class="highlight brainfuck"><table><tr><td class="code"><pre><div class="line"><span class="comment">ceph</span><span class="literal">-</span><span class="comment">osd</span> <span class="literal">-</span><span class="comment">i</span> <span class="comment">&#123;osd</span><span class="literal">-</span><span class="comment">num&#125;</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">mkfs</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">mkkey</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">osd</span><span class="literal">-</span><span class="comment">uuid</span> <span class="title">[</span><span class="comment">&#123;uuid&#125;</span><span class="title">]</span></div><div class="line"><span class="comment">如：</span></div><div class="line"><span class="comment">ceph</span><span class="literal">-</span><span class="comment">osd</span> <span class="literal">-</span><span class="comment">i</span> <span class="comment">2</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">mkfs</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">mkkey</span></div></pre></td></tr></table></figure>
+<p>在运行 ceph-osd –mkkey 之前，该目录必须是空的。并且，ceph-osd 工具需要用参数 –cluster 指定自定义的集群名。</p>
+<h4 id="注册OSD的认证密钥"><a href="#注册OSD的认证密钥" class="headerlink" title="注册OSD的认证密钥"></a>注册OSD的认证密钥</h4><figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">ceph auth add osd.&#123;osd-num&#125; osd <span class="string">'allow *'</span> mon <span class="string">'allow profile osd'</span> -i /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/<span class="title">ceph</span>-&#123;<span class="title">osd</span>-<span class="title">num</span>&#125;/<span class="title">keyring</span></span></div><div class="line">如：</div><div class="line">ceph auth add osd.<span class="number">2</span> osd <span class="string">'allow *'</span> mon <span class="string">'allow profile osd'</span> -i /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/<span class="title">ceph</span>-2/<span class="title">keyring</span></span></div></pre></td></tr></table></figure>
+<h4 id="添加Ceph节点到CRUSH映射中"><a href="#添加Ceph节点到CRUSH映射中" class="headerlink" title="添加Ceph节点到CRUSH映射中"></a>添加Ceph节点到CRUSH映射中</h4><p>如果CRUSH映射为空，则应创建节点，下面是创建一个类型为host的节点：</p>
+<figure class="highlight smali"><table><tr><td class="code"><pre><div class="line">ceph osd crush<span class="built_in"> add-bucket </span>&#123;hostname&#125; host</div></pre></td></tr></table></figure>
+<h4 id="移动节点到root节点下面"><a href="#移动节点到root节点下面" class="headerlink" title="移动节点到root节点下面"></a>移动节点到root节点下面</h4><figure class="highlight arduino"><table><tr><td class="code"><pre><div class="line">ceph osd crush <span class="built_in">move</span> node1 root=<span class="built_in">default</span></div></pre></td></tr></table></figure>
+<h4 id="添加OSD节点到CRUSH映射中"><a href="#添加OSD节点到CRUSH映射中" class="headerlink" title="添加OSD节点到CRUSH映射中"></a>添加OSD节点到CRUSH映射中</h4><p>把OSD添加到CRUSH映射，这样就可以开始接受数据了。 同样也可以反编译CRUSH的映射，把OSD添加到设备列表，把主机作为一个bucket(在它还没有加入CRUSH映射前），在主机中把设备当做项目添加，指定一个权重后重新编译并设置。</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><div class="line">ceph osd crush <span class="keyword">add</span><span class="bash"> &#123;id-or-name&#125; &#123;weight&#125; [&#123;bucket-type&#125;=&#123;bucket-name&#125; ...]</span></div><div class="line">例如：</div><div class="line">ceph osd crush <span class="keyword">add</span><span class="bash"> osd.2 0.10 host=node1</span></div><div class="line">将osd.<span class="number">2</span>加入到node1下面。</div></pre></td></tr></table></figure>
+<h4 id="添加OSD配置到ceph-conf中"><a href="#添加OSD配置到ceph-conf中" class="headerlink" title="添加OSD配置到ceph.conf中"></a>添加OSD配置到ceph.conf中</h4><p>如下面的配置[osd]是全局配置， [osd.2]是针对某个osd进行配置，会覆盖[osd]的配置</p>
+<figure class="highlight nix"><table><tr><td class="code"><pre><div class="line">[osd]</div><div class="line">osd journal <span class="attr">size</span> = <span class="number">1024</span></div><div class="line">filestore xattr use <span class="attr">omap</span> = <span class="literal">true</span></div><div class="line">osd max object name <span class="attr">len</span> = <span class="number">256</span></div><div class="line">osd max object namespace <span class="attr">len</span> = <span class="number">64</span></div><div class="line"><span class="attr">osd_op_threads</span> = <span class="number">16</span></div><div class="line"><span class="attr">osd_disk_threads</span> = <span class="number">4</span></div><div class="line">filestore op <span class="attr">threads</span> = <span class="number">32</span></div><div class="line"></div><div class="line">[osd.<span class="number">2</span>]</div><div class="line"><span class="attr">host</span> = node3</div></pre></td></tr></table></figure>
+<h3 id="启动osd进程"><a href="#启动osd进程" class="headerlink" title="启动osd进程"></a>启动osd进程</h3><p>sysvint下需要创建如下的空文件：</p>
+<figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">touch /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/&#123;<span class="title">cluster</span>-<span class="title">name</span>&#125;-&#123;<span class="title">osd</span>-<span class="title">num</span>&#125;/<span class="title">sysvinit</span></span></div><div class="line">如：</div><div class="line">touch /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/<span class="title">ceph</span>-2/<span class="title">sysvinit</span></span></div></pre></td></tr></table></figure>
+<p>还需要修改ceph目录的所有者为ceph</p>
+<figure class="highlight crystal"><table><tr><td class="code"><pre><div class="line">    chown <span class="symbol">ceph:</span>ceph /var/<span class="class"><span class="keyword">lib</span>/<span class="title">ceph</span>/<span class="title">osd</span>/<span class="title">ceph</span>-2 -<span class="title">R</span></span></div><div class="line">启动进程：</div><div class="line">    /etc/init.d/ceph start osd.<span class="number">2</span></div></pre></td></tr></table></figure>
+<h3 id="参考文档："><a href="#参考文档：" class="headerlink" title="参考文档："></a>参考文档：</h3><p><a href="http://www.quts.me/2015/03/02/ceph-deploy/#long-form" target="_blank" rel="external">http://www.quts.me/2015/03/02/ceph-deploy/#long-form</a><br><a href="http://cw760.github.io/2014/12/22/ceph%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA%E6%89%8B%E8%AE%B0/" target="_blank" rel="external">http://cw760.github.io/2014/12/22/ceph%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA%E6%89%8B%E8%AE%B0/</a><br><a href="https://www.zybuluo.com/gump88/note/440777" target="_blank" rel="external">https://www.zybuluo.com/gump88/note/440777</a></p>
+
+    
+  </div>
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持flyman</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/02/09/zookeeper/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/02/09/ceph-rgw-deploy/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              rel="noopener noreferrer"
+              target="_blank"
+              >
+              RSS
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'flyman';
+    
+    var disqus_url = 'http://fengjianque.github.io/2017/02/09/ceph-deploy/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//flyman.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
